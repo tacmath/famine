@@ -84,28 +84,10 @@ main:
     syscall              ; open(filemane, O_RDWR)
     cmp rax, 0           ; if (fd < 0) return ;
     js exit
-
-get_file_data:
     mov [rsp + fd], rax
-    mov rdi, [rsp + fd]
-    mov rsi, 0
-    mov rdx, SEEK_END
-    mov rax, SYS_LSEEK
-    syscall             ; lseek(fd, 0, SEEK_END)
-    cmp rax, 0          ; if (!size) return ;
-    jz exit
-    mov [rsp + fileSize], rax
-    mov rdi, 0
-    mov rsi, [rsp + fileSize]
-    mov rdx, PROT_READ | PROT_WRITE
-    mov r10, MAP_SHARED ; r10 est le 4 ieme argument car rcx et r11 sont détruit par le kernel
-    mov r8, [rsp + fd]
-    mov r9, 0
-    mov rax, SYS_MMAP
-    syscall             ; mmap(0, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)
-    cmp rax, 0          ; if (!fileData) return ;
-    jz exit
-    mov [rsp + fileData], rax
+    mov rdi, rsp
+    call get_file_data
+
 
 get_first_pload:
     mov r9, [rsp + fileData]
@@ -146,7 +128,29 @@ close_all:
 exit:
     leave
     ret
-    
+
+
+get_file_data:
+    mov r12, rdi
+    mov rdi, [r12 + fd]
+    mov rsi, 0
+    mov rdx, SEEK_END
+    mov rax, SYS_LSEEK
+    syscall             ; lseek(fd, 0, SEEK_END)
+    cmp rax, 0          ; if (!size) return ;
+    jz exit
+    mov [r12 + fileSize], rax
+    mov rdi, 0
+    mov rsi, [r12 + fileSize]
+    mov rdx, PROT_READ | PROT_WRITE
+    mov r10, MAP_SHARED ; r10 est le 4 ieme argument car rcx et r11 sont détruit par le kernel
+    mov r8, [r12 + fd]
+    mov r9, 0
+    mov rax, SYS_MMAP
+    syscall             ; mmap(0, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)
+    cmp rax, 0          ; if (!fileData) return ;
+    jz exit
+    mov [r12 + fileData], rax
 
 _end:
 
