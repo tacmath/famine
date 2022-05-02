@@ -50,7 +50,6 @@ struc famine
     oldEntry:   resq 1
 endstruc
 
-
 section .data
 
 str:
@@ -76,6 +75,7 @@ extern printf
 main:
     push rbp
     mov rbp, rsp
+    sub rsp, famine_size
     push rdi
     push rsi
     mov rdi, [rsi+8]
@@ -86,38 +86,38 @@ main:
     js exit
 
 get_file_data:
-    mov r12, rax
-    mov rdi, r12
+    mov [rsp + fd], rax
+    mov rdi, [rsp + fd]
     mov rsi, 0
     mov rdx, SEEK_END
     mov rax, SYS_LSEEK
     syscall             ; lseek(fd, 0, SEEK_END)
     cmp rax, 0          ; if (!size) return ;
     jz exit
-    mov r13, rax
+    mov [rsp + fileSize], rax
     mov rdi, 0
-    mov rsi, r13
+    mov rsi, [rsp + fileSize]
     mov rdx, PROT_READ | PROT_WRITE
     mov r10, MAP_SHARED ; r10 est le 4 ieme argument car rcx et r11 sont détruit par le kernel
-    mov r8, r12
+    mov r8, [rsp + fd]
     mov r9, 0
     mov rax, SYS_MMAP
     syscall             ; mmap(0, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)
-    cmp rax, 0          ; if (!ptr) return ;
+    cmp rax, 0          ; if (!fileData) return ;
     jz exit
-    mov r14, rax
+    mov [rsp + fileData], rax
 
 get_first_pload:
-    
+    mov r9, [rsp + fileData]
     xor r8, r8                  ; mise a 0
     xor rdi, rdi
-    mov di, [r14 + e_phnum]
-    mov rsi, [r14 + e_phoff]
+    mov di, [r9 + e_phnum]
+    mov rsi, [r9 + e_phoff]
     xor rdx, rdx
-    mov dx, [r14 + e_phentsize]
+    mov dx, [r9 + e_phentsize]
     xor rax, rax
 phead_loop:
-    mov eax, [r14 + rsi + p_type]
+    mov eax, [r9 + rsi + p_type]
     cmp rax, PT_LOAD
     jz first_pload_found
     inc r8
@@ -126,19 +126,21 @@ phead_loop:
     jl phead_loop
     jmp exit                    ;on quite si il y a pas de pload trouvé
 first_pload_found:
-    mov r15, rsi
+    add r9, rsi
+    mov [rsp + pload], r9
     lea rdi, [rel str]
-    mov rsi, [r14 + r15 + p_filesz]
-;    mov rsi, rax
+    mov rsi, [r9 + p_filesz]
+
+;    mov rsi, famine_size
     call printf
 
 
 close_all:
-    mov rdi, r14
-    mov rsi, r13
+    mov rdi, [rsp + fileData]
+    mov rsi, [rsp + fileSize]
     mov rax, SYS_MUNMAP 
-    syscall             ; munmap(ptr, fileSize)
-    mov rdi, r12
+    syscall             ; munmap(fileData, fileSize)
+    mov rdi, [rsp + fd]
     mov rax, SYS_CLOSE  
     syscall             ; close(fd)
 exit:
