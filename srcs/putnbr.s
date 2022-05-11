@@ -1,3 +1,5 @@
+
+
 negsign: db "-", 0,
 number: db "0123456789"
 
@@ -11,10 +13,10 @@ putnbr:
 	mov r9, 0x8000000000000000
 	test r8, r9
 	jz value
-	mov rdi, STDOUT
+	mov rdi, 1
 	lea rsi, [rel negsign]
 	mov rdx, 1
-	mov rax, WRITE
+	mov rax, 1
 	syscall
 	neg r8
 	value:
@@ -31,10 +33,10 @@ putnbr:
 	call putnbr
 	pop rdx
 	print_value:
-	mov rdi, STDOUT
+	mov rdi, 1
 	lea rsi, [rel number + rdx]
 	mov rdx, 1
-	mov rax, WRITE
+	mov rax, 1
 	syscall
 	pop r8
 	pop r9
