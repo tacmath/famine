@@ -51,7 +51,7 @@ OBJ_NAME_ASM	= $(NAME_SRC_ASM:.s=.o)
 
 OBJS = $(addprefix $(OBJ_PATH)/,$(OBJ_NAME)) $(addprefix $(OBJ_ASM_PATH)/,$(OBJ_NAME_ASM))
 
-CC			= gcc
+CC			= clang
 NASM		= nasm -f elf64 $(INC_PATH_ASM)
 CFLAGS		= -Wall -Werror -Wextra
 
