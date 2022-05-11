@@ -13,9 +13,16 @@ get_file_data:
     mov rdx, SEEK_END
     mov rax, SYS_LSEEK
     syscall             ; lseek(fd, 0, SEEK_END)
-    cmp rax, 0          ; if (!size) return ;
-    jz close_file                                                                                                    ;faire un check si le fichier est pas assez grand et le passer dans la fonction append_signature
     mov [r12 + fileSize], rax
+    cmp rax, 0          ; if (size < 0) return ;
+    jl close_file
+    cmp rax, SIGNATURE_SIZE          ; if (size > SIGNATURE_SIZE) continue ;
+    jge file_size_ok
+    mov rdi, [r12 + fileName]
+    call append_signature
+    jmp close_file
+    file_size_ok:                                                                                               ;faire un check si le fichier est pas assez grand et le passer dans la fonction append_signature
+    
     xor rdi, rdi
     mov rsi, [r12 + fileSize]
     mov rdx, PROT_READ | PROT_WRITE
