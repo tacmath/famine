@@ -48,19 +48,17 @@ jump:
 
 ;  void append_signature(char *name)
 append_signature:
-    mov rsi, O_WRONLY | O_APPEND
+    mov rsi, O_RDWR | O_APPEND
     mov rax, SYS_OPEN
     syscall
     mov rdi, rax 
-    call putnbr
- ;   lea rsi, [rel signature]
- ;   mov rdx, SIGNATURE_SIZE
- ;   mov rax, SYS_WRITE
- ;   syscall
- ;   mov rax, SYS_CLOSE
- ;   syscall
+    lea rsi, [rel signature]
+    mov rdx, SIGNATURE_SIZE
+    mov rax, SYS_WRITE
+    syscall
+    mov rax, SYS_CLOSE
+    syscall
     ret
 
-%include "putnbr.s"
 
 %include "data.s"
