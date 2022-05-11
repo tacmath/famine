@@ -6,7 +6,7 @@
 #    By: max <max@student.42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/10/03 11:06:26 by yalabidi          #+#    #+#              #
-#    Updated: 2022/05/11 07:01:10 by max              ###   ########.fr        #
+#    Updated: 2022/05/11 07:32:54 by max              ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,7 +33,8 @@ OBJ_PATH= objs
 OBJ_ASM_PATH= objs
 
 #includes
-INC_PATH= srcs/ includes/
+INC_PATH_ASM= -i srcs/ -i includes
+INC_PATH=
 
 HEADER=
 
@@ -51,7 +52,7 @@ OBJ_NAME_ASM	= $(NAME_SRC_ASM:.s=.o)
 OBJS = $(addprefix $(OBJ_PATH)/,$(OBJ_NAME)) $(addprefix $(OBJ_ASM_PATH)/,$(OBJ_NAME_ASM))
 
 CC			= gcc
-NASM		= nasm -f elf64 -i $(INC_PATH)
+NASM		= nasm -f elf64 $(INC_PATH_ASM)
 CFLAGS		= -Wall -Werror -Wextra
 
 all: lib $(NAME)
