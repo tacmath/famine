@@ -1,4 +1,4 @@
-%include "recur.s"
+%include "include_recur.s"
 
 section .text
 	global recursive
@@ -92,6 +92,11 @@ recursive:
 	jz end_recur
 
 	start_recur:
+	lea rdi, [rsp + r13 + d_name]
+	call ft_strlen
+	add rax, r8
+	cmp rax, PATHBUFFSIZE - 2
+	jge end_recur
 	lea rdi, [r12 + r8]
 	cmp byte [rdi - 1], '/'
 	jz slash_ok

@@ -6,7 +6,7 @@
 #    By: max <max@student.42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/10/03 11:06:26 by yalabidi          #+#    #+#              #
-#    Updated: 2022/05/11 06:50:10 by max              ###   ########.fr        #
+#    Updated: 2022/05/11 07:01:10 by max              ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,9 +33,9 @@ OBJ_PATH= objs
 OBJ_ASM_PATH= objs
 
 #includes
-INC_PATH= srcs/
+INC_PATH= srcs/ includes/
 
-HEADER=$(INC_PATH)/famine.h
+HEADER=
 
 NAME_SRC=\
 
