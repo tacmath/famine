@@ -61,6 +61,26 @@ check_file_integrity:
 	cmp sil, 1			; cmp 32 bit
 	je simple
 	bit_64:
+    ; check if the file is bigger than an ELF_HEADER_FILE
+    xor rax, rax
+    mov rsi, [r12 + fileSize]
+	cmp rsi, 64
+	jl simple
+
+	; check if the file is bigger than pheader info indicated
+	mov ax, [rdi + e_phentsize]
+	mov cx, [rdi + e_phnum]
+	mul cx
+	cmp si, ax
+	jl simple
+
+	; check if the file is bigger than the sheader info indicated
+	mov ax, [rdi + e_shentsize]
+	mov cx, [rdi + e_shnum]
+	mul cx
+	add rax, [rdi + e_shoff]
+	cmp rax, rsi
+	jne simple
     jmp get_file_entry
 
 	simple: 
