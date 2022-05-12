@@ -6,6 +6,7 @@
 %define STDOUT 1
 
 %define DT_DIR 4
+%define DT_REG 8
 
 %define BUFFSIZE 256
 %define PATHBUFFSIZE 1024

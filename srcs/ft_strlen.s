@@ -5,4 +5,3 @@ ft_strlen:
 	cmp BYTE [rdi + rax], 0
 	jne str_len_loop
 	ret
-

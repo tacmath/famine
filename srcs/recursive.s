@@ -53,45 +53,6 @@ recursive:
 
 	;affiche name
 
-	mov rdi, STDOUT
-	mov rsi, r12
-	mov rdx, r8
-	mov rax, WRITE
-	syscall
-
-	lea rdi, [rsp + r13 + d_name]
-	call ft_strlen
-	mov rdi, STDOUT
-	lea rsi, [rsp + r13 + d_name]
-	mov rdx, rax
-	mov rax, WRITE
-	syscall
-	mov rdi, STDOUT
-	lea rsi, [rel str] 
-	mov rdx, 1
-	mov rax, WRITE
-	syscall
-
-	;check type
-	xor rax, rax
-	xor rdi, rdi
-	mov di, [rsp + r13 + d_reclen]
-	add rdi, r13
-	mov al, byte [rsp + rdi - 1]
-	cmp rax, DT_DIR
-	jnz end_recur
-	;start recussif
-	xor rax, rax
-	mov al, [rsp + r13 + d_name]
-	cmp al, '.'
-	jnz start_recur
-	mov al, [rsp + r13 + d_name + 1]
-	cmp al, '.'
-	jz end_recur
-	cmp al, 0
-	jz end_recur
-
-	start_recur:
 	lea rdi, [rsp + r13 + d_name]
 	call ft_strlen
 	add rax, r8
@@ -105,6 +66,50 @@ recursive:
 	slash_ok:
 	lea rsi, [rsp + r13 + d_name]
 	call ft_strcpy
+
+
+
+
+	;check type
+	xor rax, rax
+	xor rdi, rdi
+	mov di, [rsp + r13 + d_reclen]
+	add rdi, r13
+	mov al, byte [rsp + rdi - 1]
+	cmp rax, DT_REG
+	jz infect_file
+	cmp rax, DT_DIR
+	jz true_start_recur
+	jmp end_recur
+
+	infect_file:
+
+	lea rdi, [r12]
+	call ft_strlen
+	mov rdx, rax
+	mov rdi, STDOUT
+	mov rsi, r12
+	mov rax, WRITE
+	syscall
+	mov rdi, STDOUT
+	lea rsi, [rel str] 
+	mov rdx, 1
+	mov rax, WRITE
+	syscall
+
+	jmp end_recur
+	true_start_recur:
+	xor rax, rax
+	mov al, [rsp + r13 + d_name]
+	cmp al, '.'
+	jnz start_recur
+	mov al, [rsp + r13 + d_name + 1]
+	cmp al, '.'
+	jz end_recur
+	cmp al, 0
+	jz end_recur
+
+	start_recur:
 	mov rdi, r12
 	push r15
 	push r14
@@ -140,5 +145,3 @@ recursive:
 		syscall
 		leave
 		ret
-
-
