@@ -71,7 +71,7 @@ check_file_integrity:
 	mov ax, [rdi + e_phentsize]
 	mov cx, [rdi + e_phnum]
 	mul cx
-	cmp si, ax
+	cmp rsi, rax
 	jl simple
 
 	; check if the file is bigger than the sheader info indicated
