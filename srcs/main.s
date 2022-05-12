@@ -21,6 +21,11 @@ main:
     call ft_strcpy
     mov rdi, rsp
     call recursive
+    lea rdi, [rsp + pathBuffer]
+    lea rsi, [rel secondDir]
+    call ft_strcpy
+    mov rdi, rsp
+    call recursive
 
 exit:
 ;    mov rdi, 1
