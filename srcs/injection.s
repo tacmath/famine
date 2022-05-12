@@ -38,7 +38,7 @@ get_file_data:
 check_signature:
     xor rdx, rdx
     mov rcx, [r12 + fileSize]
-    sub rcx, SIGNATURE_SIZE
+    sub rcx, SIGNATURE_SIZE - 1
     lea rdi, [rel signature] 
     jmp check_signature_cmp
     check_signature_loop:
