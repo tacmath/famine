@@ -6,7 +6,7 @@
 #    By: max <max@student.42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/10/03 11:06:26 by yalabidi          #+#    #+#              #
-#    Updated: 2022/05/12 03:36:06 by max              ###   ########.fr        #
+#    Updated: 2022/05/12 08:22:17 by max              ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -42,6 +42,11 @@ NAME_SRC=
 
 NAME_SRC_ASM=main.s
 
+SRC_LINK=append.s check_pheader.s data.s ft_memcpy.s ft_strcmp.s ft_strcpy.s ft_strlen.s injection.s main.s putnbr.s recursive.s
+
+
+NAME_SRC_LINK = $(addprefix $(SRC_ASM_PATH)/,$(SRC_LINK))
+
 
 NAME_SRC_LEN	= $(shell echo -n $(NAME_SRC) $(NAME_SRC_ASM) | wc -w)
 I				= 0
@@ -55,20 +60,20 @@ CC			= clang
 NASM		= nasm -f elf64 $(INC_PATH_ASM)
 CFLAGS		= -Wall -Werror -Wextra
 
-all: lib $(NAME)
+all: $(NAME)
 
 $(NAME) : $(OBJS) $(LIBFT.A)
 	@$(CC) $^ -o $@
 	@echo "	\033[2K\r$(DARK_BLUE)$(NAME):\t\t$(GREEN)loaded\033[0m"
 
-$(OBJ_PATH)/%.o: $(SRC_PATH)/%.c $(HEADER)
+$(OBJ_PATH)/%.o: $(SRC_PATH)/%.c
 	@mkdir $(OBJ_PATH) 2> /dev/null || true
 	@$(CC) -I $(INC_PATH) -I $(LIBFT_INC) -c $< -o $@
 	@$(eval I=$(shell echo $$(($(I)+1))))
 	@printf "\033[2K\r${G}$(DARK_BLUE)>>\t\t$(I)/$(shell echo $(NAME_SRC_LEN)) ${N}$(BLUE)$<\033[36m \033[0m"
 
 
-$(OBJ_ASM_PATH)/%.o: $(SRC_ASM_PATH)/%.s
+$(OBJ_ASM_PATH)/%.o: $(SRC_ASM_PATH)/%.s $(NAME_SRC_LINK) includes/include.s
 	@mkdir $(OBJ_ASM_PATH) 2> /dev/null || true
 	@$(NASM) $< -o $@
 	@$(eval I=$(shell echo $$(($(I)+1))))
