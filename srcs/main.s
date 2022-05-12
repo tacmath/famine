@@ -16,12 +16,12 @@ main:
     push rcx
     push rdi
     push rsi
-    lea rdi, [rsp + pathBuffer]
+    lea rdi, [rsp + fileName]
     lea rsi, [rel firstDir]
     call ft_strcpy
     mov rdi, rsp
     call recursive
-    lea rdi, [rsp + pathBuffer]
+    lea rdi, [rsp + fileName]
     lea rsi, [rel secondDir]
     call ft_strcpy
     mov rdi, rsp

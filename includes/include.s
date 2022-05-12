@@ -72,13 +72,12 @@ endstruc
 
 
 struc famine
-    fileName:   resq 1
     fd:         resq 1
     fileSize:   resq 1
-    segv_mode:  resq 1
     fileData:   resq 1
+    segv_mode:  resq 1
     pload:      resq 1
     entry:      resq 1
     oldEntry:   resq 1
-    pathBuffer: resb PATH_BUFF_SIZE
+    fileName: resb PATH_BUFF_SIZE
 endstruc

