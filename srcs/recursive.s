@@ -1,7 +1,4 @@
 
-str: db 10, 0,
-sle: db "/", 0,
-
 %include "ft_strcpy.s"
 
 %include "ft_strlen.s"
@@ -63,8 +60,6 @@ recursive:
 	slash_ok:
 	lea rsi, [rsp + r13 + d_name]
 	call ft_strcpy
-
-
 
 
 	;check type
@@ -135,9 +130,9 @@ recursive:
 	quit_files_loop:
 	jmp loop_dir
 	recursive_exit:
-		mov rdi, r15
-		mov rax, SYS_CLOSE
-		syscall
+	mov rdi, r15
+	mov rax, SYS_CLOSE
+	syscall
 	recursive_exit2:
-		leave
-		ret
+	leave
+	ret
