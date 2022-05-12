@@ -1,44 +1,60 @@
+section .text
+	global putnbr
 
-
-negsign: db "-", 0,
-number: db "0123456789"
+number: db "0123456789-"
 
 putnbr:
-	push rbp
-	mov rbp, rsp
-	push r8
-	push r9
-	mov r8, rdi
+	mov rbx, rdi
+	cmp rsi, 1
+	jz putnbr_8
+	cmp rsi, 2
+	jz putnbr_16
+	cmp rsi, 4
+	jz putnbr_32
+putnbr_64:
 	; manage negative number
-	mov r9, 0x8000000000000000
-	test r8, r9
-	jz value
+	cmp rbx, 0
+	jns number_recursive
+	neg rbx
+	jmp putnbr_neg
+putnbr_32:
+	; manage negative number
+	cmp ebx, 0
+	jns number_recursive
+	neg ebx
+
+putnbr_neg:
+
 	mov rdi, 1
-	lea rsi, [rel negsign]
+	lea rsi, [rel number + 10]
 	mov rdx, 1
 	mov rax, 1
 	syscall
-	neg r8
-	value:
+	
+	mov rdi, rbx
+	call number_recursive
+	ret
 
+number_recursive:
+	push rbp
+	mov rbp, rsp 
 	xor rdx, rdx      ; clear dividend
-	mov rax, r8	   	  ; dividend
+	mov rax, rdi	   	  ; dividend
 	mov rcx, 10       ; divisor
 	div rcx           ; RAX = /, RDX = %
 
-	cmp r8, 9
-	jle print_value
+	cmp rdi, 9
+	jle print_value_int
 	mov rdi, rax
 	push rdx
-	call putnbr
+	call number_recursive
 	pop rdx
-	print_value:
+	print_value_int:
 	mov rdi, 1
-	lea rsi, [rel number + rdx]
+	lea rsi, [rel number]
+	add rsi, rdx
 	mov rdx, 1
 	mov rax, 1
 	syscall
-	pop r8
-	pop r9
 	leave
 	ret
