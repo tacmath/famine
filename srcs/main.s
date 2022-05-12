@@ -28,11 +28,6 @@ main:
     call recursive
 
 exit:
-;    mov rdi, 1
-;    lea rsi, [rel signature]
-;    mov rdx, SIGNATURE_SIZE
-;    mov rax, SYS_WRITE
-;    syscall
     pop rsi
     pop rdi
     pop rcx

