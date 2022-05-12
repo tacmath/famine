@@ -1,7 +1,6 @@
 ;	int getfiletype(char *data)
-getfiletype:
-	mov esi, [rdi]
-	cmp esi, 1179403647 ; magic number 0x7f454c46 464c457f
+getfiletype: 
+	cmp dword [rdi], 1179403647 ; magic number 0x7f454c46 464c457f
 	jnz simple
 	mov sil, [rdi + s_support]
 	cmp sil, 1			; cmp 32 bit

