@@ -5,10 +5,6 @@ number: db "0123456789-"
 
 putnbr:
 	mov rbx, rdi
-	cmp rsi, 1
-	jz putnbr_8
-	cmp rsi, 2
-	jz putnbr_16
 	cmp rsi, 4
 	jz putnbr_32
 putnbr_64:
