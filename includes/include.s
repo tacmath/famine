@@ -16,8 +16,6 @@
 %define DT_DIR 4
 %define DT_REG 8
 
-%define STDOUT 1
-
 %define SYS_WRITE   1
 %define SYS_OPEN    2
 %define SYS_CLOSE   3

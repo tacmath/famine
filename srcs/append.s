@@ -1,6 +1,6 @@
 ;  void append_signature(char *name)
 append_signature:
-    mov rsi, O_RDWR | O_APPEND
+    mov rsi, O_WRONLY | O_APPEND
     mov rax, SYS_OPEN
     syscall
     mov rbx, rax

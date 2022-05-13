@@ -6,13 +6,12 @@
 
 section .text
     global main
-    extern printf
 
 main:
-    push rbp
+    push rbp                             ; comstruit la stack
     mov rbp, rsp
-    sub rsp, famine_size                        ;   le segv est sur la stack  peux etre modulo 8
-    push rdx
+    sub rsp, famine_size                 ; ajoute la structure famine dans la stack
+    push rdx                             ; push les registre important pour pouvoir les rétablir une fois le virus executer
     push rcx
     push rdi
     push rsi
