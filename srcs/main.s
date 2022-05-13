@@ -45,8 +45,6 @@ jump:
 
 %include "injection.s"
 
-%include "ft_strcmp.s"
-
 %include "append.s"
 
 %include "data.s"

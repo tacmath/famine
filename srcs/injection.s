@@ -38,20 +38,19 @@ get_file_data:
 
 check_signature:                ; boucle sur tout les bytes du fichier pour voir si il n'y a pas deja une signature
     xor rdx, rdx
-    mov rcx, [r12 + fileSize]
-    sub rcx, SIGNATURE_SIZE - 1
-    lea rdi, [rel signature] 
+    mov rbx, [r12 + fileSize]
+    sub rbx, SIGNATURE_SIZE - 1
     jmp check_signature_cmp
     check_signature_loop:
+        lea rdi, [rel signature] 
         mov rsi, [r12 + fileData]
-        add rsi, rdx  
-        call ft_strcmp
-        cmp rax, 0
-        jz close_mmap           ; on quite proprement si il a deja une signature
-        inc rdx
-        
+        add rsi, rdx
+        mov rcx, SIGNATURE_SIZE  
+        repz cmpsb
+        jz close_mmap           ; on quite proprement si il y a deja une signature
+        inc rdx  
     check_signature_cmp:
-    cmp rdx, rcx
+    cmp rdx, rbx
     jl check_signature_loop
     
 check_file_integrity:

@@ -42,7 +42,7 @@ NAME_SRC=
 
 NAME_SRC_ASM=main.s
 
-SRC_LINK=append.s check_pheader.s data.s ft_strcmp.s ft_strcpy.s ft_strlen.s injection.s main.s putnbr.s recursive.s
+SRC_LINK=append.s check_pheader.s data.s ft_strcpy.s ft_strlen.s injection.s main.s putnbr.s recursive.s
 
 
 NAME_SRC_LINK = $(addprefix $(SRC_ASM_PATH)/,$(SRC_LINK))

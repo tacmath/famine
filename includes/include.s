@@ -1,6 +1,6 @@
 %define PROG_SIZE   _end - main
 %define JMP_OFFSET  jump - main
-%define SIGNATURE_SIZE _end - signature - 1
+%define SIGNATURE_SIZE _end - signature
 %define READ_DIR_BUFF_SIZE  256
 %define PATH_BUFF_SIZE      1024
 
