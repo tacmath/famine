@@ -8,9 +8,7 @@ section .text
     global main
 
 main:
-    push rbp                             ; comstruit la stack
-    mov rbp, rsp
-    sub rsp, famine_size                 ; ajoute la structure famine dans la stack
+    enter famine_size, 0                 ; comstruit la stack et ajoute la structure famine dans la stack
     push rdx                             ; push les registre important pour pouvoir les rétablir une fois le virus executer
     push rcx
     push rdi

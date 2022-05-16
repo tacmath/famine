@@ -12,9 +12,7 @@
 
 ;	void recursive(t_famine *famine)
 recursive:
-	push rbp
-	mov rbp, rsp
-	sub rsp, READ_DIR_BUFF_SIZE	; creer un buffer sur la stack utiliser avec getend pour lire les information de donner
+	enter READ_DIR_BUFF_SIZE, 0	; creer un buffer sur la stack utiliser avec getend pour lire les information de donner
 	;open:
 	mov r12, rdi
 	cmp r12, 0					; quitte si le pointeur sur structure est null (inutile pour l'instant)
