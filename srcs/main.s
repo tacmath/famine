@@ -43,6 +43,8 @@ jump:
 
 %include "injection.s"
 
+%include "ft_memcpy.s"
+
 %include "append.s"
 
 %include "data.s"
