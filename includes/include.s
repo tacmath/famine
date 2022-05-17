@@ -1,4 +1,6 @@
 %define PROG_SIZE   _end - main
+%define PROG_OFFSET   1024
+%define TOTAL_SIZE   PROG_SIZE + PROG_OFFSET
 %define JMP_OFFSET  jump - main
 %define SIGNATURE_SIZE _end - signature
 %define READ_DIR_BUFF_SIZE  256

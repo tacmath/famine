@@ -1,56 +1,58 @@
+;------------------------------------------------------------------------------;
+; void   ft_putnbr(const long nb)                                              ;
+;                                                                              ;
+; 1st arg:  rdi  nb                                                            ;
+;------------------------------------------------------------------------------;
+
 section .text
-	global putnbr
+	global ft_putnbr		; export ft_putnbr (LINUX)
 
-number: db "0123456789-"
+; rbx, nb
+ft_putnbr:					; ft_putnbr (LINUX)
+    enter 21, 0             ; char buff[21];
 
-putnbr:
-	mov rbx, rdi
-	cmp rsi, 4
-	jz putnbr_32
-putnbr_64:
-	; manage negative number
-	cmp rbx, 0
-	jns number_recursive
-	neg rbx
-	jmp putnbr_neg
-putnbr_32:
-	; manage negative number
-	cmp ebx, 0
-	jns number_recursive
-	neg ebx
+    push rax                ; --> no destructif function
+    push rbx                ; --> no destructif function
+    push rcx                ; --> no destructif function
+    push rdx                ; --> no destructif function
+    push rdi                ; --> no destructif function
+    push rsi                ; --> no destructif function
 
-putnbr_neg:
+    mov rax, rdi            ; long tmp = nb
+    mov rbx, 21             ; int idx = 21;
+    cmp rdi, 0              ; if (nb < 0)
+    jns ft_putnbrloop                ;   nb = abs(nb)
+    neg rax
+    ft_putnbrloop:
+    cmp rax, 0              ; while (nb)
+    jz endft_putnbrloop              ;
+    xor rdx, rdx            ;
+    mov rcx, 10             ; nb = nb / 10
+    div rcx                 ;
+    add dl, '0'             ; c = nb % 10 + '0'
+    dec rbx                 ; idx = idx - 1
+    mov [rsp + rbx], dl     ; buff[idx] = c
+    jmp ft_putnbrloop                ;
+    endft_putnbrloop:
+    cmp rdi, 0              ; if (nb < 0)
+    jns exitft_putnbr                ; idx = idx - 1
+    dec rbx                 ; buff[idx] = '-'
+    mov byte [rsp + rbx], '-'
+    exitft_putnbr:
+    mov rax, SYS_WRITE
+    mov rdi, 1
+    mov rsi, rsp
+    add rsi, rbx
+    mov rdx, 21
+    sub rdx, rbx
+    syscall                 ; write(1, buff, 21 - buff)
 
-	mov rdi, 1
-	lea rsi, [rel number + 10]
-	mov rdx, 1
-	mov rax, 1
-	syscall
-	
-	mov rdi, rbx
-	call number_recursive
-	ret
+    pop rsi                ; --> no destructif function
+    pop rdi                ; --> no destructif function
+    pop rdx                ; --> no destructif function
+    pop rcx                ; --> no destructif function
+    pop rbx                ; --> no destructif function
+    pop rax                ; --> no destructif function
 
-number_recursive:
-	push rbp
-	mov rbp, rsp 
-	xor rdx, rdx      ; clear dividend
-	mov rax, rdi	   	  ; dividend
-	mov rcx, 10       ; divisor
-	div rcx           ; RAX = /, RDX = %
-
-	cmp rdi, 9
-	jle print_value_int
-	mov rdi, rax
-	push rdx
-	call number_recursive
-	pop rdx
-	print_value_int:
-	mov rdi, 1
-	lea rsi, [rel number]
-	add rsi, rdx
-	mov rdx, 1
-	mov rax, 1
-	syscall
-	leave
-	ret
+    leave
+    ret

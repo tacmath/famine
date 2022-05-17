@@ -13,6 +13,14 @@ main:
     push rcx
     push rdi
     push rsi
+
+ ;   mov rdi, 1
+  ;  lea rsi, [rel signature]
+   ; mov rdx, SIGNATURE_SIZE
+   ; mov rax, SYS_WRITE
+   ; syscall
+
+
     lea rdi, [rsp + fileName]
     lea rsi, [rel firstDir]
     call ft_strcpy
@@ -46,5 +54,7 @@ jump:
 %include "ft_memcpy.s"
 
 %include "append.s"
+
+;%include "putnbr.s"
 
 %include "data.s"
