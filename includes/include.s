@@ -21,6 +21,7 @@
 %define DT_DIR 4
 %define DT_REG 8
 %define GRND_RANDOM 2
+%define PTRACE_TRACEME 0
 
 %define SYS_WRITE   1
 %define SYS_OPEN    2
@@ -30,6 +31,7 @@
 %define SYS_MUNMAP  11
 %define SYS_EXIT    60
 %define SYS_GETDENTS 78
+%define SYS_PTRACE  101
 %define SYS_GETRANDOM 318
 
 struc   Elf64_Ehdr
