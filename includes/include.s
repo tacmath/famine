@@ -7,6 +7,9 @@
 %define ENCRYPT_OFFSET encrypted_start - main
 %define READ_DIR_BUFF_SIZE  256
 %define PATH_BUFF_SIZE      1024
+%define PROCESS_PATH_LEN 100
+%define PROCESS_STATUS_READ_SIZE 20
+
 
 %define O_WRONLY	1
 %define O_RDWR      2
@@ -23,6 +26,7 @@
 %define GRND_RANDOM     2
 %define PTRACE_TRACEME  0
 
+%define SYS_READ        0
 %define SYS_WRITE       1
 %define SYS_OPEN        2
 %define SYS_CLOSE       3
@@ -78,6 +82,11 @@ struc linux_dirent
 	d_name:	 resb 1;	/* nom du fichier visé */
 endstruc
 
+struc process_finder
+	process_dir_buffer: resb READ_DIR_BUFF_SIZE
+	process_path:		resb PROCESS_PATH_LEN
+	process_status:		resb PROCESS_STATUS_READ_SIZE
+endstruc
 
 struc famine
     fd:         resq 1
@@ -87,6 +96,5 @@ struc famine
     pload:      resq 1
     entry:      resq 1
     oldEntry:   resq 1
-    fork:       resq 1
     fileName: resb PATH_BUFF_SIZE
 endstruc

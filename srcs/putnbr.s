@@ -1,56 +1,43 @@
-section .text
-	global putnbr
+;------------------------------------------------------------------------------;
+; void   ft_putnbr(const long nb)                                              ;
+;                                                                              ;
+; 1st arg:  rdi  nb                                                            ;
+;------------------------------------------------------------------------------;
 
-number: db "0123456789-"
-
-putnbr:
-	mov rbx, rdi
-	cmp rsi, 4
-	jz putnbr_32
-putnbr_64:
-	; manage negative number
-	cmp rbx, 0
-	jns number_recursive
-	neg rbx
-	jmp putnbr_neg
-putnbr_32:
-	; manage negative number
-	cmp ebx, 0
-	jns number_recursive
-	neg ebx
-
-putnbr_neg:
-
-	mov rdi, 1
-	lea rsi, [rel number + 10]
-	mov rdx, 1
-	mov rax, 1
-	syscall
-	
-	mov rdi, rbx
-	call number_recursive
-	ret
-
-number_recursive:
-	push rbp
-	mov rbp, rsp 
-	xor rdx, rdx      ; clear dividend
-	mov rax, rdi	   	  ; dividend
-	mov rcx, 10       ; divisor
-	div rcx           ; RAX = /, RDX = %
-
-	cmp rdi, 9
-	jle print_value_int
-	mov rdi, rax
-	push rdx
-	call number_recursive
-	pop rdx
-	print_value_int:
-	mov rdi, 1
-	lea rsi, [rel number]
-	add rsi, rdx
-	mov rdx, 1
-	mov rax, 1
-	syscall
-	leave
-	ret
+ft_putnbr:                                      ; ft_putnbr (LINUX)
+    enter 21, 0             ; char buff[21];  
+    mov rax, rdi            ; long tmp = nb
+    mov rbx, 21             ; int idx = 21;
+    cmp rdi, 0              ; if (nb < 0)
+    jz putnbr_print_zero
+    jns putnbr_loop                ;   nb = abs(nb)
+    neg rax
+    putnbr_loop:
+    cmp rax, 0              ; while (nb)
+    jz endputnbr_loop              ;
+    xor rdx, rdx            ;
+    mov rcx, 10             ; nb = nb / 10
+    div rcx                 ;
+    add dl, '0'             ; c = nb % 10 + '0'
+    dec rbx                 ; idx = idx - 1
+    mov [rsp + rbx], dl     ; buff[idx] = c
+    jmp putnbr_loop                ;
+    endputnbr_loop:
+    cmp rdi, 0              ; if (nb < 0)
+    jns putnbr_exit                ; idx = idx - 1
+    dec rbx                 ; buff[idx] = '-'
+    mov byte [rsp + rbx], '-'
+    putnbr_exit:
+    mov rax, SYS_WRITE
+    mov rdi, 1
+    mov rsi, rsp
+    add rsi, rbx
+    mov rdx, 21
+    sub rdx, rbx
+    syscall                 ; write(1, buff, 21 - buff)
+    leave
+    ret
+    putnbr_print_zero:
+    dec rbx
+    mov byte [rsp + rbx], '0'
+    jmp putnbr_exit
