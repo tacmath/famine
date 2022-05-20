@@ -33,6 +33,7 @@
 %define SYS_LSEEK       8
 %define SYS_MMAP        9
 %define SYS_MUNMAP      11
+%define SYS_GETPID      39
 %define SYS_FORK        57
 %define SYS_EXIT        60
 %define SYS_GETDENTS    78
@@ -96,5 +97,6 @@ struc famine
     pload:      resq 1
     entry:      resq 1
     oldEntry:   resq 1
+    ppid:       resq 1
     fileName: resb PATH_BUFF_SIZE
 endstruc

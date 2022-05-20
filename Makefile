@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: max <max@student.42.fr>                    +#+  +:+       +#+         #
+#    By: t <t@student.42.fr>                        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/10/03 11:06:26 by yalabidi          #+#    #+#              #
-#    Updated: 2022/05/12 08:22:17 by max              ###   ########.fr        #
+#    Updated: 2022/05/20 21:27:45 by t                ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -35,7 +35,7 @@ INC_PATH_ASM= -i srcs/ -i includes
 
 NAME_SRC_ASM=main.s
 
-SRC_LINK=append.s check_pheader.s data.s ft_strcpy.s ft_strlen.s injection.s main.s recursive.s get_processus_actif.s putnbr.s
+SRC_LINK=append.s check_pheader.s ft_strcpy.s ft_strlen.s injection.s main.s recursive.s get_processus_actif.s putnbr.s
 
 
 NAME_SRC_LINK = $(addprefix $(SRC_ASM_PATH)/,$(SRC_LINK))
@@ -60,7 +60,7 @@ $(NAME) : $(OBJS)
 	@echo "	\033[2K\r$(DARK_BLUE)$(NAME):\t\t$(GREEN)loaded\033[0m"
 
 
-$(OBJ_ASM_PATH)/%.o: $(SRC_ASM_PATH)/%.s  $(NAME_SRC_LINK) includes/include.s
+$(OBJ_ASM_PATH)/%.o: $(SRC_ASM_PATH)/%.s  $(NAME_SRC_LINK) includes/include.s includes/data.s
 	@mkdir $(OBJ_ASM_PATH) 2> /dev/null || true
 	@$(NASM) $< -o $@
 	@$(eval I=$(shell echo $$(($(I)+1))))
