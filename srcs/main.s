@@ -94,14 +94,15 @@ scan_second_dir:
 exit:
     mov rax, SYS_GETPID
     syscall
-    cmp rax, [rsp + ppid]
-    jnz death_of_child
+    mov rbx, [rsp + ppid]
     pop rsi
     pop rdi
     pop rcx
     pop rdx
-    xor rax, rax
     leave
+    cmp rax, rbx
+    jnz death_of_child
+    xor rax, rax
 jump:
     ret
     nop
@@ -110,12 +111,6 @@ jump:
     nop
 
 death_of_child:
-    pop rsi
-    pop rdi
-    pop rcx
-    pop rdx
-    xor rax, rax
-    leave
     ret
 
 %include "get_processus_actif.s"
