@@ -87,6 +87,8 @@ endif
 
 re: fclean all
 
+test: all
+	@sh .test.sh
 	
 
 .PHONY: all re clean fclean lib test silent
