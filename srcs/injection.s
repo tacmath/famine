@@ -172,25 +172,31 @@ change_key:
     mov rax, SYS_GETRANDOM
     syscall
 
+; rdi = data
+; rsi = key
+; rax = n  int data[n]
+; rcx = m  int key[n]
 encrypt:
     lea rdi, [rbx + ENCRYPT_OFFSET]
     lea rsi, [rbx + KEY_OFFSET]
 	xor rax, rax
 	xor rcx, rcx
-	mov bl,  [rsi + rcx]
-	add [rdi + rax], bl
+    xor rbx, rbx
+    jmp encrypt_byte
 	encrypt_loop:
 	inc rcx
 	cmp rcx, KEY_SIZE
 	jnz encrypt_nochange
 	xor rcx, rcx
 	encrypt_nochange:
-	mov bl,  [rsi + rcx]
-	add bl,  [rdi + rax]
-	inc rax
+    mov bl,  [rdi + rax - 1]
+    encrypt_byte:
+    add bl,  [rsi + rcx]
 	add [rdi + rax], bl
+    inc rax
+    encrypt_cmp:
 	cmp rax, ENCRYPT_SIZE
-	jnz encrypt_loop
+	jl encrypt_loop
 
 close_mmap:
     mov rdi, [r12 + fileData]

