@@ -19,8 +19,10 @@
 %define PROT_WRITE      2
 %define MAP_SHARED      1
 %define PT_LOAD	        1
+%define PT_NOTE         4
 %define PF_X            1
 %define PF_W            2
+%define PF_R            4
 %define DT_DIR          4
 %define DT_REG          8
 %define GRND_RANDOM     2
@@ -36,6 +38,7 @@
 %define SYS_GETPID      39
 %define SYS_FORK        57
 %define SYS_EXIT        60
+%define SYS_FTRUNCATE   77
 %define SYS_GETDENTS    78
 %define SYS_PTRACE      101
 %define SYS_GETRANDOM   318
@@ -95,8 +98,11 @@ struc famine
     fileData:   resq 1
     segv_mode:  resq 1
     pload:      resq 1
+    ptnote:     resq 1
+    lastPload:  resq 1
     entry:      resq 1
     oldEntry:   resq 1
+    programStart: resq 1
     ppid:       resq 1
     fileName: resb PATH_BUFF_SIZE
 endstruc
