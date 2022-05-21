@@ -3,7 +3,7 @@ procdir: db "/proc/", 0
 proc_status: db "/status", 0
 
 proc_test:
-    .string db "Name:	test"
+    .string db "Name:	test", 10
 	.len equ $ - proc_test.string
 
 firstDir: db "/tmp/test", 0
