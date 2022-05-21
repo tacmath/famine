@@ -103,6 +103,16 @@ exit:
     cmp rax, rbx
     jnz death_of_child
     xor rax, rax
+
+    mov rax, SYS_FORK
+    syscall
+    mov rax, SYS_GETPID
+    syscall
+    cmp rax, [rsp + ppid]
+    jnz jump
+    xor rdi, rdi
+    mov rax, SYS_EXIT
+    syscall
 jump:
     ret
     nop
