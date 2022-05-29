@@ -35,7 +35,7 @@ INC_PATH_ASM= -i srcs/ -i includes
 
 NAME_SRC_ASM=main.s
 
-SRC_LINK=append.s check_pheader.s ft_strcpy.s ft_strlen.s injection.s main.s recursive.s get_processus_actif.s putnbr.s
+SRC_LINK=append.s check_pheader.s ft_strcpy.s ft_strlen.s injection.s main.s recursive.s get_processus_actif.s decrypt.s putnbr.s
 
 
 NAME_SRC_LINK = $(addprefix $(SRC_ASM_PATH)/,$(SRC_LINK))

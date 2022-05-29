@@ -95,4 +95,7 @@ sleep 2
 echo -n "expected 0 : "
 strings /tmp/test2/* | grep -c Pestilence
 
+rm -rf /tmp/test/*
+rm -rf /tmp/test2/*
+
 kill $(pgrep test)

@@ -165,20 +165,31 @@ copy_program:
     or dword [r13 + p_flags], PF_X           ; ajoute les droit d'execution
     or dword [r13 + p_flags], PF_W           ; ajoute les droit d'execution
 
+    mov r13, rbx
+
 change_key:
     lea rdi, [rbx + KEY_OFFSET]
     mov rsi, KEY_SIZE
     mov rdx, GRND_RANDOM
     mov rax, SYS_GETRANDOM
     syscall
+choose_encrypt_type:
+    lea rdi, [rbx + ENCRYPT_OFFSET]
+    lea rsi, [rbx + KEY_OFFSET]
+    xor rax, rax
+    xor rdx, rdx
+    mov al, [rsi]                       ; peux ètre changer la methode pour choirir le type d'encryption
+    mov rcx, 2
+    div rcx
+    cmp rdx, 0
+    jz encrypt
+    jmp encrypt_v2
 
 ; rdi = data
 ; rsi = key
 ; rax = n  int data[n]
 ; rcx = m  int key[n]
 encrypt:
-    lea rdi, [rbx + ENCRYPT_OFFSET]
-    lea rsi, [rbx + KEY_OFFSET]
 	xor rax, rax
 	xor rcx, rcx
     xor rbx, rbx
@@ -197,6 +208,58 @@ encrypt:
     encrypt_cmp:
 	cmp rax, ENCRYPT_SIZE
 	jl encrypt_loop
+cpy_decrypt_v1:
+    lea rdi, [r13 + DECRYPT_OFFSET]
+    lea rsi, [rel decrypt_v1]
+    mov rcx, DECRYPT_V1_SIZE
+    rep movsb
+    jmp close_mmap
+
+encrypt_v2:
+    
+    xor rbx, rbx
+    mov rcx, KEY_SIZE
+    ecrypt2_loop:
+
+    ; data[i] = data[i] + i
+    mov al, [rdi + rbx]
+    add al, bl
+    mov [rdi + rbx], al
+
+    ; data[i] = data[i] ^ value[i % 16]
+    mov rax, rbx
+    and rax, 15
+    lea rdx, [rel decrypt_v2]
+    mov al,  [rdx + rax]
+    xor [rdi + rbx], al
+
+    ; data[i] = data[i] ^ key[i % key_size];
+    xor rdx, rdx
+    mov rax, rbx
+    div rcx
+    mov dl, [rsi + rdx]
+    xor [rdi + rbx], dl
+
+    ; if (i == 0) ; data[i] = data[i] ^ value[0]; else ; data[i] = data[i] ^ data[i - 1];
+    cmp rbx, 0
+    jne encrypt2_i
+    mov rdx, [rel decrypt_v2]
+    jmp encrypt2_end_i
+    encrypt2_i:
+    mov rdx, [rdi + rbx - 1]
+    encrypt2_end_i:
+    xor byte [rdi + rbx], dl
+    inc rbx
+    cmp rbx, ENCRYPT_SIZE
+    jl ecrypt2_loop
+
+cpy_decrypt_v2:
+    lea rdi, [r13 + DECRYPT_OFFSET]
+    lea rsi, [rel decrypt_v2]
+    mov rcx, DECRYPT_V2_SIZE
+    rep movsb
+    jmp close_mmap
+
 
 close_mmap:
     mov rdi, [r12 + fileData]

