@@ -263,6 +263,7 @@ cpy_decrypt_v2:
 decrypt_v3:
     lea rdi, [rel decrypt_v3 + DECRYPT_FUNC_SIZE]
     lea rsi, [rel decrypt_v3 + DECRYPT_KEY_OFFSET]
+    xor rbx, rbx
 encrypt_v3:
     mov rcx, KEY_SIZE
 
