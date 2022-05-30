@@ -10,6 +10,7 @@
 %define DECRYPT_OFFSET          decrypte - main
 %define DECRYPT_V1_SIZE         decrypt_v1_end - decrypt_v1
 %define DECRYPT_V2_SIZE         decrypt_v2_end - decrypt_v2
+%define DECRYPT_V3_SIZE         decrypt_v3_end - decrypt_v3
 %define READ_DIR_BUFF_SIZE      256
 %define PATH_BUFF_SIZE          1024
 %define PROCESS_PATH_LEN        100

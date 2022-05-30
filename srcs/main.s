@@ -16,7 +16,7 @@ main:
 
 decrypte:
     jmp encrypted_start
-    db "hahaahhhahhahahaha"
+    db "hahaahhhahhah"
     lea rdi, [rel decrypt_v2 + DECRYPT_FUNC_SIZE]
     mov rsi, ENCRYPT_SIZE
     lea rdx, [rel decrypt_v2 + DECRYPT_KEY_OFFSET]

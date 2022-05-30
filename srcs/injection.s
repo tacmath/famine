@@ -176,14 +176,17 @@ change_key:
 choose_encrypt_type:
     lea rdi, [rbx + ENCRYPT_OFFSET]
     lea rsi, [rbx + KEY_OFFSET]
+    xor rbx, rbx
     xor rax, rax
     xor rdx, rdx
     mov al, [rsi]                       ; peux ètre changer la methode pour choirir le type d'encryption
-    mov rcx, 2
+    mov rcx, 3
     div rcx
     cmp rdx, 0
     jz encrypt
-    jmp encrypt_v2
+    cmp rdx, 1
+    jz encrypt_v2
+    jmp encrypt_v3
 
 ; rdi = data
 ; rsi = key
@@ -192,7 +195,6 @@ choose_encrypt_type:
 encrypt:
 	xor rax, rax
 	xor rcx, rcx
-    xor rbx, rbx
     jmp encrypt_byte
 	encrypt_loop:
 	inc rcx
@@ -216,8 +218,6 @@ cpy_decrypt_v1:
     jmp close_mmap
 
 encrypt_v2:
-    
-    xor rbx, rbx
     mov rcx, KEY_SIZE
     ecrypt2_loop:
 
@@ -260,6 +260,64 @@ cpy_decrypt_v2:
     rep movsb
     jmp close_mmap
 
+decrypt_v3:
+    lea rdi, [rel decrypt_v3 + DECRYPT_FUNC_SIZE]
+    lea rsi, [rel decrypt_v3 + DECRYPT_KEY_OFFSET]
+encrypt_v3:
+    mov rcx, KEY_SIZE
+
+    ecrypt3_loop:
+
+    ; i % key_size
+    xor rdx, rdx
+    mov rax, rbx
+    div rcx
+
+    ; char c = (data[i] >> 4) & 0xf
+    mov r11b, byte [rdi + rbx]
+    shr r11b, 4
+    and r11b, 0xf
+    ; char e = (key[i % key_size] >> 4) & 0xf
+    mov al, byte [rsi + rdx]
+    shr al, 4
+    and al, 0xf
+
+    ; c = c ^ e & 0xf;
+    xor r11b, al
+    and r11b, 0xf
+
+    ; char f = (key[i % key_size]) & 0xf
+    mov al, byte [rsi + rdx]
+    and al, 0xf
+
+    ; char d = (data[i]) & 0xf
+    mov dl, byte [rdi + rbx]
+    and dl, 0xf
+
+    ; d = (d ^ f) & 0xf;
+    xor dl, al
+    and dl, 0xf
+
+    ; data[i] = (c << 4) | d
+    shl r11b, 4
+    or r11b, dl
+    mov byte [rdi + rbx], r11b
+
+    ; data[i] = (data[i] ^ i) & 0xff
+    xor byte [rdi + rbx], bl
+
+    ;  for (int i = 0; i < data_size ; i++)
+    inc rbx
+    cmp rbx, ENCRYPT_SIZE
+    jl ecrypt3_loop
+decrypt_v3_end:
+cpy_decrypt_v3:
+    lea rdi, [r13 + DECRYPT_OFFSET]
+    lea rsi, [rel decrypt_v3]
+    mov rcx, DECRYPT_V3_SIZE
+    rep movsb
+    mov word [rdi], 0xe7ff ; ff e7                   jmpq   *%rdi
+    jmp close_mmap
 
 close_mmap:
     mov rdi, [r12 + fileData]
