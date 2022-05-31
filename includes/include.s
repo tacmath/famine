@@ -47,6 +47,7 @@
 %define SYS_FTRUNCATE   77
 %define SYS_GETDENTS    78
 %define SYS_PTRACE      101
+%define SYS_SETSID      112
 %define SYS_GETRANDOM   318
 
 struc   Elf64_Ehdr

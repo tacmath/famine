@@ -59,7 +59,7 @@ sleep 0.1
 echo -n "expected 0 : "
 strings /tmp/test2/pwd | grep -c Pestilence
 
-kill $(pgrep test)
+pkill test > /dev/null
 
 
 cp /bin/* /tmp/test
@@ -98,4 +98,4 @@ strings /tmp/test2/* | grep -c Pestilence
 rm -rf /tmp/test/*
 rm -rf /tmp/test2/*
 
-kill $(pgrep test)
+pkill test > /dev/null
