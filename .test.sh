@@ -63,16 +63,16 @@ pkill test > /dev/null
 
 
 cp /bin/* /tmp/test
+echo -n "expected [0-1000] : "
 ./famine
-sleep 2
-echo -n "expected [0-200] : "
+sleep 10
 strings /tmp/test/* | grep -c Pestilence
 
 
 cp /sbin/* /tmp/test2
+echo -n "expected [0-1000] : "
 /tmp/test/ls > /dev/null
-sleep 2
-echo -n "expected [0-200] : "
+sleep 10
 strings /tmp/test2/* | grep -c Pestilence
 
 
@@ -83,16 +83,16 @@ rm -rf /tmp/test2/*
 ./resources/test &
 
 cp /bin/* /tmp/test
+echo -n "expected 0 : "
 ./famine
 sleep 2
-echo -n "expected 0 : "
 strings /tmp/test/* | grep -c Pestilence
 
 
 cp /sbin/* /tmp/test2
+echo -n "expected 0 : "
 /tmp/test/ls > /dev/null
 sleep 2
-echo -n "expected 0 : "
 strings /tmp/test2/* | grep -c Pestilence
 
 rm -rf /tmp/test/*

