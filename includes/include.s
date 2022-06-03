@@ -15,6 +15,7 @@
 %define PATH_BUFF_SIZE          1024
 %define PROCESS_PATH_LEN        100
 %define PROCESS_STATUS_READ_SIZE 20
+%define WAIT_FORK_OPTION 14
 
 
 %define O_WRONLY	1
@@ -44,6 +45,7 @@
 %define SYS_GETPID      39
 %define SYS_FORK        57
 %define SYS_EXIT        60
+%define SYS_WAIT4       61
 %define SYS_FTRUNCATE   77
 %define SYS_GETDENTS    78
 %define SYS_PTRACE      101
@@ -111,5 +113,7 @@ struc famine
     oldEntry:   resq 1
     programStart: resq 1
     ppid:       resq 1
+
+    wait_opt:   resd 1
     fileName: resb PATH_BUFF_SIZE
 endstruc

