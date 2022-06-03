@@ -81,9 +81,6 @@ scan_first_dir:
     cmp rax, [rsp + ppid]
     jz scan_second_dir
 
-    mov rax, SYS_SETSID
-    syscall
-
     lea rdi, [rsp + fileName]
     lea rsi, [rel firstDir]
     call ft_strcpy
@@ -99,14 +96,12 @@ scan_second_dir:
     cmp rax, [rsp + ppid]
     jz exit
 
-    mov rax, SYS_SETSID
-    syscall
-
     lea rdi, [rsp + fileName]
     lea rsi, [rel secondDir]
     call ft_strcpy
     mov rdi, rsp
     call recursive
+    jmp exit
 
 exit:
     mov rax, SYS_GETPID
