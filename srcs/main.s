@@ -139,11 +139,7 @@ useless_v3:
     syscall
 
     mov rax, SYS_FORK
-    syscall
     mov rax, SYS_GETPID
-    syscall
-    cmp rax, [rsp + ppid]
-    jz exit
 
 uselessv4:
 
@@ -186,7 +182,6 @@ uselessv5:
 
 exit:
     mov rax, SYS_GETPID
-    syscall
     mov rbx, [rsp + ppid]
     pop rsi
     pop rdi
@@ -194,8 +189,6 @@ exit:
     pop rdx
     leave
 
-    cmp rax, rbx
-    jnz death_of_child
     xor rax, rax
     
 jump:
