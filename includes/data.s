@@ -2,6 +2,10 @@ procdir: db "/proc/", 0
 
 proc_status: db "/status", 0
 
+bin: db "/bin", 0
+
+pestilence: db "pestilence", 0
+
 proc_test:
     .string db "Name:	test", 10
 	.len equ $ - proc_test.string
