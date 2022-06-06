@@ -6,15 +6,15 @@ mkdir -p /tmp/test2
 rm -rf /tmp/test/*
 rm -rf /tmp/test2/*
 
-./famine
-./famine
+./pestilence
+./pestilence
 sleep 0.1
 cp /bin/ls /tmp/test
 echo -n "expected 0 : "
 strings /tmp/test/ls | grep -c Pestilence
 
-./famine
-./famine
+./pestilence
+./pestilence
 sleep 0.1
 echo -n "expected 1 : "
 strings /tmp/test/ls | grep -c Pestilence
@@ -38,15 +38,15 @@ rm -rf /tmp/test2/*
 
 ./resources/test &
 
-./famine
-./famine
+./pestilence
+./pestilence
 sleep 0.1
 cp /bin/ls /tmp/test
 echo -n "expected 0 : "
 strings /tmp/test/ls | grep -c Pestilence
 
-./famine
-./famine
+./pestilence
+./pestilence
 sleep 0.1
 echo -n "expected 0 : "
 strings /tmp/test/ls | grep -c Pestilence
@@ -69,7 +69,7 @@ pkill test 2>> /dev/null
 
 cp /bin/l* /tmp/test
 echo -n "expected [1-200] : "
-./famine
+./pestilence
 sleep 1
 strings /tmp/test/* | grep -c Pestilence
 
@@ -89,7 +89,7 @@ rm -rf /tmp/test2/*
 
 cp /bin/l* /tmp/test
 echo -n "expected 0 : "
-./famine
+./pestilence
 sleep 1
 strings /tmp/test/* | grep -c Pestilence
 

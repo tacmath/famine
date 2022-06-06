@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: t <t@student.42.fr>                        +#+  +:+       +#+         #
+#    By: t <t@student.42lyon.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/10/03 11:06:26 by yalabidi          #+#    #+#              #
-#    Updated: 2022/05/20 21:27:45 by t                ###   ########.fr        #
+#    Updated: 2022/06/06 17:22:40 by t                ###   ########lyon.fr    #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,7 +22,7 @@ FLASH_GREEN = \033[33;32m
 WHITE_BOLD = \033[37m
 
 # nom de l'executable
-NAME = famine
+NAME = pestilence
 
 #sources path
 SRC_ASM_PATH= srcs
